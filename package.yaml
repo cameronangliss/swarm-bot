@@ -1,0 +1,61 @@
+name:                swarm-bot
+version:             0.1.0.0
+github:              "cameronangliss/swarm-bot"
+license:             BSD3
+author:              "Cameron Angliss"
+maintainer:          "cameronangliss99@gmail.com"
+copyright:           "2022 Cameron Angliss"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            pending
+# category:            Computational Intelligence, Robotics
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/cameronangliss/swarm-bot#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- deepseq
+- MonadRandom
+- parallel
+- process
+- random
+- splitmix
+- time
+
+default-extensions:
+- BangPatterns
+- DeriveAnyClass
+- DeriveGeneric
+
+library:
+  source-dirs: src
+
+executables:
+  swarm-bot-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - '"-with-rtsopts=-N -s"'
+    - -O2
+    dependencies:
+    - swarm-bot
+
+tests:
+  swarm-bot-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - swarm-bot
