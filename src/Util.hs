@@ -2,8 +2,6 @@ module Util where
 
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
-                                                , liftRand
-                                                , randomR
                                                 )
 
 -- iterates through a given function, returning a list of all outcomes of the function throughout all the calls made to it

@@ -4,6 +4,7 @@ import           Control.Monad                  ( zipWithM )
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 , liftRand
+                                                , random
                                                 )
 import           Data.Maybe                     ( fromMaybe )
 import           Net                            ( Net
@@ -12,10 +13,6 @@ import           Net                            ( Net
                                                 , net2Chrom
                                                 )
 import           NetSim                         ( getNetFit )
-import           System.Random                  ( StdGen
-                                                , mkStdGen
-                                                , randomR
-                                                )
 import           Util                           ( iterateR
                                                 , mean
                                                 , remove
@@ -100,7 +97,7 @@ genNetChild :: (Net, Net) -> Float -> Float -> Rand StdGen Net
 genNetChild (p1, p2) mut crossType = do
     let p1Chrom = fromMaybe [] (net2Chrom p1)
         p2Chrom = fromMaybe [] (net2Chrom p2)
-    r             <- liftRand (randomR (0.0, 1.0 :: Float))
+    r             <- liftRand random
     childChrom    <- if r < crossType then interCross p1Chrom p2Chrom else intraCross p1Chrom p2Chrom
     mutChildChrom <- mutNet mut childChrom
     let chrom = fromMaybe p1 (chrom2Net mutChildChrom)
@@ -109,7 +106,7 @@ genNetChild (p1, p2) mut crossType = do
 -- chooses a pair of parent neural networks to reproduce
 selectNetParents :: [Net] -> [Float] -> Rand StdGen (Net, Net)
 selectNetParents nets fits = do
-    rands <- iterateR (liftRand $ randomR (0.0, 1.0)) 2
+    rands <- iterateR (liftRand random) 2
     let shiftedFits = map (subtract (minimum fits - 1)) fits
         probsLst    = getProbsLst $ map (/ sum shiftedFits) shiftedFits
         i1          = findParentIndex (head rands) probsLst
@@ -136,7 +133,7 @@ intraCross = (zipWithM . zipWithM . zipWithM) chooseObj
 
 chooseObj :: a -> a -> Rand StdGen a
 chooseObj a1 a2 = do
-    r <- liftRand (randomR (0.0, 1.0 :: Float))
+    r <- liftRand random :: Rand StdGen Float
     if r < 0.5 then return a1 else return a2
 
 -- mutates the chromosome of the given neural network
@@ -145,7 +142,7 @@ mutNet mut = mapM . mapM . mapM $ mutBit mut
 
 mutBit :: Float -> Char -> Rand StdGen Char
 mutBit mut bit = do
-    r <- liftRand (randomR (0.0, 1.0 :: Float))
+    r <- liftRand random
     if r < mut then return (flipBit bit) else return bit
 
 flipBit :: Char -> Char
