@@ -25,24 +25,22 @@ data BotParams = BotParams
     , numNs :: !Int
     , genP  :: !Int
     , i     :: !Int
-    , xT    :: !Float
     , mut   :: !Float
     , s     :: !Int
     }
 
 instance Show BotParams where
     show pars =
-        let segs =
-                map show [numBs pars, numNs pars, genP pars, i pars] ++ map show [xT pars, mut pars] ++ [show $ s pars]
+        let segs = map show [numBs pars, numNs pars, genP pars, i pars] ++ [show $ mut pars] ++ [show $ s pars]
         in  (init . foldl (++) "Bot_" . map (++ "_")) segs
 
 instance Read BotParams where
     readsPrec _ input =
         let inputStrs                         = tail $ split '_' input
             [numBots, numNrns, genPart, iter] = map read (take 4 inputStrs)
-            [crossType, mut]                  = (map read . take 2 . drop 4) inputStrs
+            mut                               = read (inputStrs !! 4)
             seed                              = read (last inputStrs)
-        in  [(BotParams numBots numNrns genPart iter crossType mut seed, "")]
+        in  [(BotParams numBots numNrns genPart iter mut seed, "")]
 
 data BotRecords = BotRecords
     { maxBs  :: [Bot]
@@ -69,7 +67,6 @@ data BotssData = BotssData
 
 -- runs a fully automated genetic algorithm of bots over a given number of generations
 -- consists of 6 parallel genetic algorithms for each leg of the bot
--- crossType is the % chance that evolution will have inter-gene crossover as opposed to intra-gene crossover, and is a float from 0 to 1
 getInitBotRecords :: BotParams -> Rand StdGen BotRecords
 getInitBotRecords params = do
     refNets <- makeRandNets (numNs params) 6
@@ -104,7 +101,7 @@ evolveBotPop params records legID = do
         fits      = fss records !! legID
         eliteBot  = getBestAgent bots fits
         legs      = stripRefBots legID bots
-        netParams = NetParams (numBs params) (numNs params) (i params) (xT params) (mut params) (s params)
+        netParams = NetParams (numBs params) (numNs params) (i params) (mut params) (s params)
     childNets <- evolveNetPop netParams legs fits
     let childBots = applyRefToLegs refBot legID childNets ++ [eliteBot]
     return childBots
