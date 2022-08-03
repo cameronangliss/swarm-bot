@@ -3,7 +3,7 @@ module Util where
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 , liftRand
-                                                , randomR
+                                                , random
                                                 )
 
 -- iterates through a given function, returning a list of all outcomes of the function throughout all the calls made to it
@@ -13,6 +13,11 @@ iterateR s n = do
     a    <- s
     rest <- iterateR s (n - 1)
     return (a : rest)
+
+chooseObj :: Float -> a -> a -> Rand StdGen a
+chooseObj odds a1 a2 = do
+    r <- liftRand random
+    if r <= odds then return a1 else return a2
 
 fromTup :: (a, a) -> [a]
 fromTup (x, y) = [x, y]
