@@ -14,6 +14,7 @@ import           Net                            ( Net
                                                 )
 import           NetSim                         ( getNetFit )
 import           Util                           ( iterateR
+                                                , chooseObj
                                                 , mean
                                                 , remove
                                                 , split
@@ -126,15 +127,10 @@ findParentIndex r probs = sum $ map (\p -> if r <= p then 0 else 1) (init probs)
 
 -- executes crossover between two neural networks' chromosomes
 interCross :: [[String]] -> [[String]] -> Rand StdGen [[String]]
-interCross = (zipWithM . zipWithM) chooseObj
+interCross = zipWithM . zipWithM $ chooseObj 0.5
 
 intraCross :: [[String]] -> [[String]] -> Rand StdGen [[String]]
-intraCross = (zipWithM . zipWithM . zipWithM) chooseObj
-
-chooseObj :: a -> a -> Rand StdGen a
-chooseObj a1 a2 = do
-    r <- liftRand random :: Rand StdGen Float
-    if r < 0.5 then return a1 else return a2
+intraCross = zipWithM . zipWithM . zipWithM $ chooseObj 0.5
 
 -- mutates the chromosome of the given neural network
 mutNet :: Float -> [[String]] -> Rand StdGen [[String]]
