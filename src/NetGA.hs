@@ -4,6 +4,7 @@ import           Control.Monad                  ( zipWithM )
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 , liftRand
+                                                , random
                                                 )
 import           Data.Maybe                     ( fromMaybe )
 import           Net                            ( Net
@@ -12,11 +13,8 @@ import           Net                            ( Net
                                                 , net2Chrom
                                                 )
 import           NetSim                         ( getNetFit )
-import           System.Random                  ( StdGen
-                                                , mkStdGen
-                                                , randomR
-                                                )
 import           Util                           ( iterateR
+                                                , chooseObj
                                                 , mean
                                                 , remove
                                                 , split
@@ -107,7 +105,7 @@ genNetChild (p1, p2) mut = do
 -- chooses a pair of parent neural networks to reproduce
 selectNetParents :: [Net] -> [Float] -> Rand StdGen (Net, Net)
 selectNetParents nets fits = do
-    rands <- iterateR (liftRand $ randomR (0.0, 1.0)) 2
+    rands <- iterateR (liftRand random) 2
     let shiftedFits = map (subtract (minimum fits - 1)) fits
         probsLst    = getProbsLst $ map (/ sum shiftedFits) shiftedFits
         i1          = findParentIndex (head rands) probsLst
@@ -127,12 +125,7 @@ findParentIndex r probs = sum $ map (\p -> if r <= p then 0 else 1) (init probs)
 
 -- executes crossover between two neural networks' chromosomes
 crossNets :: [[String]] -> [[String]] -> Rand StdGen [[String]]
-crossNets = (zipWithM . zipWithM) chooseObj
-
-chooseObj :: a -> a -> Rand StdGen a
-chooseObj a1 a2 = do
-    r <- liftRand (randomR (0.0, 1.0 :: Float))
-    if r < 0.5 then return a1 else return a2
+crossNets = zipWithM . zipWithM $ chooseObj 0.5
 
 -- mutates the chromosome of the given neural network
 mutNet :: Float -> [[String]] -> Rand StdGen [[String]]
@@ -140,7 +133,7 @@ mutNet mut = mapM . mapM . mapM $ mutBit mut
 
 mutBit :: Float -> Char -> Rand StdGen Char
 mutBit mut bit = do
-    r <- liftRand (randomR (0.0, 1.0 :: Float))
+    r <- liftRand random
     if r < mut then return (flipBit bit) else return bit
 
 flipBit :: Char -> Char
