@@ -218,14 +218,13 @@ getBotParams currSeed = do
             input <- getLine
             readIO input :: IO Float
     putStrLn "\nEnter Genetic Algorithm Parameters:"
-    numBots   <- getIntLine "Population Size = "
-    numNrns   <- getIntLine "Number of Neurons Per Neural Net = "
-    genPart   <- getIntLine "Number of Generations Per Reference Bot = "
-    iter      <- getIntLine "Number of Iterations Per Bot Test = "
-    crossType <- getFloatLine "Fraction of Inter-gene Crossover (as opposed to intra-gene) = "
-    mut       <- getFloatLine "Mutation Rate = "
-    seed      <- maybe (getIntLine "Initial Random Seed (used for generating random values) = ") return currSeed
-    let params = BotParams numBots numNrns genPart iter crossType mut seed
+    numBots <- getIntLine "Population Size = "
+    numNrns <- getIntLine "Number of Neurons Per Neural Net = "
+    genPart <- getIntLine "Number of Generations Per Reference Bot = "
+    iter    <- getIntLine "Number of Iterations Per Bot Test = "
+    mut     <- getFloatLine "Mutation Rate = "
+    seed    <- maybe (getIntLine "Initial RNG Seed = ") return currSeed
+    let params = BotParams numBots numNrns genPart iter mut seed
     putStr "Are these values all correct? (y/n): "
     input <- getLine
     let action
@@ -333,13 +332,12 @@ getLegParams currSeed = do
             input <- getLine
             readIO input :: IO Float
     putStrLn "\nEnter parameters:"
-    numNets   <- getIntLine "numNets = "
-    numNrns   <- getIntLine "numNrns = "
-    iter      <- getIntLine "iter = "
-    crossType <- getFloatLine "crossType = "
-    mut       <- getFloatLine "mut = "
-    seed      <- maybe (getIntLine "RNG seed = ") return currSeed
-    let params = NetParams numNets numNrns iter crossType mut seed
+    numNets <- getIntLine "numNets = "
+    numNrns <- getIntLine "numNrns = "
+    iter    <- getIntLine "iter = "
+    mut     <- getFloatLine "mut = "
+    seed    <- maybe (getIntLine "Initial RNG seed = ") return currSeed
+    let params = NetParams numNets numNrns iter mut seed
     putStr "Are these values all correct? (y/n): "
     input <- getLine
     let action

@@ -24,23 +24,22 @@ data NetParams = NetParams
     { numNets :: !Int
     , numNrns :: !Int
     , i       :: !Int
-    , xT      :: !Float
     , mut     :: !Float
     , s       :: !Int
     }
 
 instance Show NetParams where
     show pars =
-        let segs = map show [numNets pars, numNrns pars, i pars] ++ map show [xT pars, mut pars] ++ [show $ s pars]
+        let segs = map show [numNets pars, numNrns pars, i pars] ++ [show $ mut pars] ++ [show $ s pars]
         in  (init . foldl (++) "Leg_" . map (++ "_")) segs
 
 instance Read NetParams where
     readsPrec _ input =
         let inputStrs                = tail $ split '_' input
             [numNets, numNrns, iter] = map read (take 3 inputStrs)
-            [crossType, mut]         = (map read . take 2 . drop 3) inputStrs
+            mut                      = read (inputStrs !! 3)
             seed                     = read (last inputStrs)
-        in  [(NetParams numNets numNrns iter crossType mut seed, "")]
+        in  [(NetParams numNets numNrns iter mut seed, "")]
 
 data NetRecords = NetRecords
     { maxNs :: [Net]
@@ -84,22 +83,21 @@ getBestAgent agents fits = fst $ foldl agentMax (head agents, head fits) (zip ag
 
 -- generates an entire new population of legs reproductively from the old population
 evolveNetPop :: NetParams -> [Net] -> [Float] -> Rand StdGen [Net]
-evolveNetPop params nets fits = iterateR (getNextNetChild nets fits (mut params) (xT params)) (numNets params - 1)
+evolveNetPop params nets fits = iterateR (getNextNetChild nets fits (mut params)) (numNets params - 1)
 
-getNextNetChild :: [Net] -> [Float] -> Float -> Float -> Rand StdGen Net
-getNextNetChild nets fits mut crossType = do
+getNextNetChild :: [Net] -> [Float] -> Float -> Rand StdGen Net
+getNextNetChild nets fits mut = do
     parents <- selectNetParents nets fits
-    genNetChild parents mut crossType
+    genNetChild parents mut
 
 -- makes a new neural network offspring from two parents chosen probabilistically based on fitnesses of leg population
 -- reproduction includes segmented crossover of chromosomes and mutation
 -- interOrIntra == 0 -> inter-gene crossover (segmented crossover); interOrIntra == 1 -> intra-gene crossover (universal crossover)
-genNetChild :: (Net, Net) -> Float -> Float -> Rand StdGen Net
-genNetChild (p1, p2) mut crossType = do
+genNetChild :: (Net, Net) -> Float -> Rand StdGen Net
+genNetChild (p1, p2) mut = do
     let p1Chrom = fromMaybe [] (net2Chrom p1)
         p2Chrom = fromMaybe [] (net2Chrom p2)
-    r             <- liftRand random
-    childChrom    <- if r < crossType then interCross p1Chrom p2Chrom else intraCross p1Chrom p2Chrom
+    childChrom    <- crossNets p1Chrom p2Chrom
     mutChildChrom <- mutNet mut childChrom
     let chrom = fromMaybe p1 (chrom2Net mutChildChrom)
     return chrom
@@ -126,11 +124,8 @@ findParentIndex :: Float -> [Float] -> Int
 findParentIndex r probs = sum $ map (\p -> if r <= p then 0 else 1) (init probs)
 
 -- executes crossover between two neural networks' chromosomes
-interCross :: [[String]] -> [[String]] -> Rand StdGen [[String]]
-interCross = zipWithM . zipWithM $ chooseObj 0.5
-
-intraCross :: [[String]] -> [[String]] -> Rand StdGen [[String]]
-intraCross = zipWithM . zipWithM . zipWithM $ chooseObj 0.5
+crossNets :: [[String]] -> [[String]] -> Rand StdGen [[String]]
+crossNets = zipWithM . zipWithM $ chooseObj 0.5
 
 -- mutates the chromosome of the given neural network
 mutNet :: Float -> [[String]] -> Rand StdGen [[String]]
