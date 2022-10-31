@@ -21,24 +21,11 @@ def mkPlotFiles():
 
 def plotFits():
     xs = list(range(len(maxFits)))
-    if recordType == "smooth":
-        maxPlot = plt.plot(xs, maxFits, color="black", linewidth=1.2, label="MaxFits")
-        bestPlot = plt.plot(
-            xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
-        )
-        avgPlot = plt.plot(
-            xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
-        )
-        refPlot = plt.plot(xs, refFits, color="crimson", linewidth=1.2, label="RefFits")
-    elif recordType == "raw" or recordType == "default":
-        refPlot = plt.plot(xs, refFits, color="crimson", linewidth=1.2, label="RefFits")
-        maxPlot = plt.plot(xs, maxFits, color="black", linewidth=1.2, label="MaxFits")
-        bestPlot = plt.plot(
-            xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
-        )
-        avgPlot = plt.plot(
-            xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
-        )
+    maxPlot = plt.plot(xs, maxFits, color="black", linewidth=1.2, label="MaxFits")
+    bestPlot = plt.plot(
+        xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
+    )
+    avgPlot = plt.plot(xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits")
     plt.xlabel("Generation")
     plt.ylabel("Fitness (mm)")
     plt.title("Bot Evolution\nBest Fitness = " + str(round(maxFits[-1])) + " mm")
@@ -75,9 +62,9 @@ def plotLegMotions():
     plt.ylabel("Position (mm)")
     plt.title(legTitle)
     if recordType == "default":
-        endLabel = "_currentRefBotMotions.png"
-    elif recordType == "ref":
-        endLabel = "_gen" + botGen + "refBotMotions.png"
+        endLabel = "_currentBestBotMotions.png"
+    elif recordType == "best":
+        endLabel = "_gen" + botGen + "bestBotMotions.png"
     elif recordType == "max":
         endLabel = "_gen" + botGen + "maxBotMotions.png"
     fileName = ".stack-work\\plots\\" + name + endLabel
@@ -101,9 +88,9 @@ def plotBotPath():
     plt.ylabel("Lateral Distance (mm)")
     plt.title(pathTitle)
     if recordType == "default":
-        endLabel = "_currentRefBotPath.png"
-    elif recordType == "ref":
-        endLabel = "_gen" + botGen + "refBotPath.png"
+        endLabel = "_currentBestBotPath.png"
+    elif recordType == "best":
+        endLabel = "_gen" + botGen + "bestBotPath.png"
     elif recordType == "max":
         endLabel = "_gen" + botGen + "maxBotPath.png"
     fileName = ".stack-work\\plots\\" + name + endLabel
@@ -167,29 +154,28 @@ dataFile = open(".stack-work\\datafile.txt", "r")
 maxFits = interpLstStr(dataFile.readline()[:-1])
 bestFits = interpLstStr(dataFile.readline()[:-1])
 avgFits = interpLstStr(dataFile.readline()[:-1])
-refFits = interpLstStr(dataFile.readline()[:-1])
 legMoves = interpLstStr(dataFile.readline()[:-1])
 hexPath = interpLstStr(dataFile.readline())
 if recordType == "default":
     legTitle = (
-        "Current RefBot's Leg Motions\nFitness = " + str(round(refFits[-1])) + " mm"
+        "Current BestBot's Leg Motions\nFitness = " + str(round(bestFits[-1])) + " mm"
     )
     pathTitle = (
-        "Current RefBot's Path on Floor\nFitness = " + str(round(refFits[-1])) + " mm"
+        "Current BestBot's Path on Floor\nFitness = " + str(round(bestFits[-1])) + " mm"
     )
-elif recordType == "ref":
+elif recordType == "best":
     legTitle = (
-        "RefBot's Leg Motions at Generation "
+        "BestBot's Leg Motions at Generation "
         + botGen
         + "\nFitness = "
-        + str(round(refFits[-1]))
+        + str(round(bestFits[-1]))
         + " mm"
     )
     pathTitle = (
-        "RefBot's Path on Floor at Generation "
+        "BestBot's Path on Floor at Generation "
         + botGen
         + "\nFitness = "
-        + str(round(refFits[-1]))
+        + str(round(bestFits[-1]))
         + " mm"
     )
 elif recordType == "max":
@@ -209,7 +195,7 @@ elif recordType == "max":
     )
 if recordType == "smooth":
     lists = []
-    for lst in [bestFits, avgFits, refFits]:
+    for lst in [bestFits, avgFits, bestFits]:
         r_smooth_spline = robjects.r["smooth.spline"]
         r_x = robjects.FloatVector(range(len(lst)))
         r_y = robjects.FloatVector(lst)

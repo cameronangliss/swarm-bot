@@ -40,7 +40,7 @@ library:
 executables:
   swarm-bot-exe:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         src
     ghc-options:
     - -threaded
     - -rtsopts

@@ -1,10 +1,6 @@
 module BotSim where
 
 import           Bot                            ( Bot(..) )
-import           Control.Parallel.Strategies    ( parList
-                                                , rdeepseq
-                                                , using
-                                                )
 import           Net                            ( Net
                                                 , getNrns
                                                 )
@@ -27,9 +23,6 @@ botWidth = 240
 
 defaultPathData :: PathData
 defaultPathData = PathData 0 0 0 [(0, 0)]
-
-getBotFitss :: Int -> [[Bot]] -> [[Float]]
-getBotFitss iter botss = map (getBotFits iter) botss `using` parList rdeepseq
 
 getBotFits :: Int -> [Bot] -> [Float]
 getBotFits iter = map (getBotFit iter)

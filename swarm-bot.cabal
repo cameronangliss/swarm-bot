@@ -28,6 +28,7 @@ library
       Bot
       BotGA
       BotSim
+      Main
       Net
       NetGA
       NetSim
@@ -55,9 +56,17 @@ library
 executable swarm-bot-exe
   main-is: Main.hs
   other-modules:
+      Bot
+      BotGA
+      BotSim
+      Net
+      NetGA
+      NetSim
+      Nrn
+      Util
       Paths_swarm_bot
   hs-source-dirs:
-      app
+      src
   default-extensions:
       BangPatterns
       DeriveAnyClass

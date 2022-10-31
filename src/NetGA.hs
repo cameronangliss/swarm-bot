@@ -14,13 +14,12 @@ import           Net                            ( Net
                                                 )
 import           NetSim                         ( getNetFit )
 import           Util                           ( iterateR
-                                                , chooseObj
                                                 , mean
                                                 , remove
                                                 , split
                                                 )
 
-data NetParams = NetParams
+data Params = Params
     { numNets :: !Int
     , numNrns :: !Int
     , i       :: !Int
@@ -28,18 +27,18 @@ data NetParams = NetParams
     , s       :: !Int
     }
 
-instance Show NetParams where
+instance Show Params where
     show pars =
         let segs = map show [numNets pars, numNrns pars, i pars] ++ [show $ mut pars] ++ [show $ s pars]
-        in  (init . foldl (++) "Leg_" . map (++ "_")) segs
+        in  init $ concatMap (++ "_") segs
 
-instance Read NetParams where
+instance Read Params where
     readsPrec _ input =
-        let inputStrs                = tail $ split '_' input
+        let inputStrs                = split '_' input
             [numNets, numNrns, iter] = map read (take 3 inputStrs)
             mut                      = read (inputStrs !! 3)
             seed                     = read (last inputStrs)
-        in  [(NetParams numNets numNrns iter mut seed, "")]
+        in  [(Params numNets numNrns iter mut seed, "")]
 
 data NetRecords = NetRecords
     { maxNs :: [Net]
@@ -51,7 +50,7 @@ data NetRecords = NetRecords
     deriving (Show, Read)
 
 -- executes a fully-automated genetic algorithm for a given number of generations
-startNetGA :: NetParams -> Rand StdGen NetRecords
+startNetGA :: Params -> Rand StdGen NetRecords
 startNetGA params = do
     nets <- makeRandNets (numNrns params) (numNets params)
     let fits    = map (getNetFit $ i params) nets
@@ -61,12 +60,10 @@ startNetGA params = do
         records = NetRecords [maxNet] [maxFit] [avgFit] nets fits
     return records
 
-runNetGA :: NetParams -> NetRecords -> Rand StdGen NetRecords
+runNetGA :: Params -> NetRecords -> Rand StdGen NetRecords
 runNetGA params records = do
-    let eliteNet = last (maxNs records)
-    childNets <- evolveNetPop params (ns records) (fs records)
-    let newNets    = eliteNet : childNets
-        newFits    = map (getNetFit $ i params) newNets
+    newNets <- evolveNetPop params (ns records) (fs records)
+    let newFits    = map (getNetFit $ i params) newNets
         maxNet     = getBestAgent newNets newFits
         updMaxNets = maxNs records ++ [maxNet]
         maxFit     = maximum newFits
@@ -82,8 +79,8 @@ getBestAgent agents fits = fst $ foldl agentMax (head agents, head fits) (zip ag
     where agentMax (agent1, fit1) (agent2, fit2) = if fit1 > fit2 then (agent1, fit1) else (agent2, fit2)
 
 -- generates an entire new population of legs reproductively from the old population
-evolveNetPop :: NetParams -> [Net] -> [Float] -> Rand StdGen [Net]
-evolveNetPop params nets fits = iterateR (getNextNetChild nets fits (mut params)) (numNets params - 1)
+evolveNetPop :: Params -> [Net] -> [Float] -> Rand StdGen [Net]
+evolveNetPop params nets fits = iterateR (getNextNetChild nets fits (mut params)) (numNets params)
 
 getNextNetChild :: [Net] -> [Float] -> Float -> Rand StdGen Net
 getNextNetChild nets fits mut = do
@@ -125,7 +122,12 @@ findParentIndex r probs = sum $ map (\p -> if r <= p then 0 else 1) (init probs)
 
 -- executes crossover between two neural networks' chromosomes
 crossNets :: [[String]] -> [[String]] -> Rand StdGen [[String]]
-crossNets = zipWithM . zipWithM $ chooseObj 0.5
+crossNets = zipWithM . zipWithM $ crossChroms 0.5
+
+crossChroms :: Float -> String -> String -> Rand StdGen String
+crossChroms odds c1 c2 = do
+    r <- liftRand random
+    if r <= odds then return c1 else return c2
 
 -- mutates the chromosome of the given neural network
 mutNet :: Float -> [[String]] -> Rand StdGen [[String]]
