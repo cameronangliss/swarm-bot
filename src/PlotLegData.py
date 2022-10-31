@@ -1,18 +1,21 @@
 import matplotlib.pyplot as plt
 import os
-os.environ["R_HOME"] = 'C:/Program Files/R/R-4.2.0'
+
+os.environ["R_HOME"] = "C:/Program Files/R/R-4.2.0"
 os.environ["PATH"] = "C:/Program Files/R/R-4.2.0/bin/x64" + ";" + os.environ["PATH"]
 import rpy2.robjects as robjects
 import sys
+
 
 def mkPlotFiles():
     plotFits()
     plotMotionSpace()
 
+
 def plotFits():
     xs = range(len(bestFits))
-    bestPlot = plt.plot(xs, bestFits, color = "limegreen", label = "Best")
-    avgPlot = plt.plot(xs, avgFits, color = "dodgerblue", label = "Average")
+    bestPlot = plt.plot(xs, bestFits, color="limegreen", label="Best")
+    avgPlot = plt.plot(xs, avgFits, color="dodgerblue", label="Average")
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
     plt.title("Leg Evolution")
@@ -25,12 +28,13 @@ def plotFits():
     plt.savefig(fileName)
     plt.close("all")
 
+
 def plotMotionSpace():
     xMin, xMax, yMin, yMax = min(xLst), max(xLst), min(yLst), max(yLst)
     xRange, yRange = xMax - xMin, yMax - yMin
     yMid = (yMin + yMax) / 2
-    plt.plot(xLst, yLst, color = "dimgrey")
-    plt.axis([-5, xMax + 5, -xRange/20, 19/20 * xRange])
+    plt.plot(xLst, yLst, color="dimgrey")
+    plt.axis([-5, xMax + 5, -xRange / 20, 19 / 20 * xRange])
     plt.xlabel("X Position (mm)")
     plt.ylabel("Y Position (mm)")
     plt.title("Best Leg Motion\nFitness = " + str(bestFit) + " mm")
@@ -42,21 +46,31 @@ def plotMotionSpace():
     plt.savefig(fileName)
     plt.close("all")
 
+
 def interpLstStr(lstStr):
     if isFlatLst(lstStr):
-        return [float(s) for s in lstStr[1:-1].split(',')]
+        return [float(s) for s in lstStr[1:-1].split(",")]
     else:
         posStart = lstStr[1:].find("[") + 1
         substr = lstStr[posStart:]
         posEnd = posStart + findEndBracket(substr)
         if posStart == 1 and posEnd + 2 == len(lstStr):
-            return [interpLstStr(lstStr[posStart:posEnd+1])]
+            return [interpLstStr(lstStr[posStart : posEnd + 1])]
         elif posStart == 1:
-            return [interpLstStr(lstStr[posStart:posEnd+1])] + interpLstStr("[" + lstStr[posEnd+2:])
+            return [interpLstStr(lstStr[posStart : posEnd + 1])] + interpLstStr(
+                "[" + lstStr[posEnd + 2 :]
+            )
         elif posEnd + 2 == len(lstStr):
-            return interpLstStr(lstStr[:posStart-1] + "]") + [interpLstStr(lstStr[posStart:posEnd+1])]
+            return interpLstStr(lstStr[: posStart - 1] + "]") + [
+                interpLstStr(lstStr[posStart : posEnd + 1])
+            ]
         else:
-            return interpLstStr(lstStr[:posStart-1] + "]") + [interpLstStr(lstStr[posStart:posEnd+1])] + interpLstStr("[" + lstStr[posEnd+2:])
+            return (
+                interpLstStr(lstStr[: posStart - 1] + "]")
+                + [interpLstStr(lstStr[posStart : posEnd + 1])]
+                + interpLstStr("[" + lstStr[posEnd + 2 :])
+            )
+
 
 def findEndBracket(lstStr):
     c1 = 0
@@ -73,11 +87,13 @@ def findEndBracket(lstStr):
         c1 = c1 + 1
     return -1
 
+
 def isFlatLst(lstStr):
     if lstStr[1:].find("[") == -1:
         return True
     else:
         return False
+
 
 name = sys.argv[1]
 isFinal = bool(sys.argv[2])
