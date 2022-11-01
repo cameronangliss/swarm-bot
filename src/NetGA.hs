@@ -30,7 +30,12 @@ data Params = Params
 
 instance Show Params where
     show pars =
-        let segs = map show [numNets pars, numNrns pars, i pars] ++ [show $ mut pars] ++ [show $ s pars]
+        let
+            segs =
+                map show [numNets pars, numNrns pars, i pars]
+                    ++ [show $ mut pars]
+                    ++ [show $ elitism pars]
+                    ++ [show $ s pars]
         in  init $ concatMap (++ "_") segs
 
 instance Read Params where
