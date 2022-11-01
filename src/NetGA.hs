@@ -24,6 +24,7 @@ data Params = Params
     , numNrns :: !Int
     , i       :: !Int
     , mut     :: !Float
+    , elitism :: !Bool
     , s       :: !Int
     }
 
@@ -37,8 +38,9 @@ instance Read Params where
         let inputStrs                = split '_' input
             [numNets, numNrns, iter] = map read (take 3 inputStrs)
             mut                      = read (inputStrs !! 3)
+            elitism                  = read (inputStrs !! 4)
             seed                     = read (last inputStrs)
-        in  [(Params numNets numNrns iter mut seed, "")]
+        in  [(Params numNets numNrns iter mut elitism seed, "")]
 
 data NetRecords = NetRecords
     { maxNs :: [Net]
@@ -80,7 +82,12 @@ getBestAgent agents fits = fst $ foldl agentMax (head agents, head fits) (zip ag
 
 -- generates an entire new population of legs reproductively from the old population
 evolveNetPop :: Params -> [Net] -> [Float] -> Rand StdGen [Net]
-evolveNetPop params nets fits = iterateR (getNextNetChild nets fits (mut params)) (numNets params)
+evolveNetPop params nets fits
+    | elitism params = do
+        let eliteNet = head [ nets !! n | n <- [0 .. length fits], fits !! n == maximum fits ]
+        newNets <- iterateR (getNextNetChild nets fits (mut params)) (numNets params - 1)
+        return (eliteNet : newNets)
+    | otherwise = iterateR (getNextNetChild nets fits (mut params)) (numNets params)
 
 getNextNetChild :: [Net] -> [Float] -> Float -> Rand StdGen Net
 getNextNetChild nets fits mut = do

@@ -157,9 +157,7 @@ computeBotRun params records g genCap = do
         !maxFit          = last (BotGA.maxFs newRecords)
     putStrLn "Finished!"
     when (length (bestFs newRecords) `mod` 100 == 1) $ recordBotRun params newRecords g2 "default"
-    if genCap < length (bestFs newRecords)
-        then return (newRecords, g2)
-        else computeBotRun params newRecords g2 genCap
+    if genCap < length (bestFs newRecords) then return (newRecords, g2) else computeBotRun params newRecords g2 genCap
 
 recordBotRun :: Params -> BotRecords -> StdGen -> String -> IO ()
 recordBotRun params records g recordType = do
@@ -296,8 +294,11 @@ getParams currSeed = do
     numNrns <- getIntLine "numNrns = "
     iter    <- getIntLine "iter = "
     mut     <- getFloatLine "mut = "
-    seed    <- maybe (getIntLine "Initial RNG seed = ") return currSeed
-    let params = Params numNets numNrns iter mut seed
+    putStrLn "Turn elitism on? (y/n)"
+    input <- getLine
+    let elitism = input == "y"
+    seed <- maybe (getIntLine "Initial RNG seed = ") return currSeed
+    let params = Params numNets numNrns iter mut elitism seed
     putStr "Are these values all correct? (y/n): "
     input <- getLine
     let action
