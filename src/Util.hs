@@ -15,14 +15,6 @@ iterateR s n = do
     rest <- iterateR s (n - 1)
     return (a : rest)
 
-shuffle :: [a] -> Rand StdGen [a]
-shuffle [] = return []
-shuffle xs = do
-    n <- liftRand $ randomR (0, length xs - 1)
-    let x = xs !! n
-    rest <- shuffle $ remove n xs
-    return (x : rest)
-
 fromTup :: (a, a) -> [a]
 fromTup (x, y) = [x, y]
 

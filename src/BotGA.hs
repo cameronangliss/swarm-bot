@@ -17,10 +17,10 @@ import           NetGA                          ( Params(..)
                                                 , evolveNetPop
                                                 , getBestAgent
                                                 )
+import           System.Random.Shuffle          ( shuffleM )
 import           Util                           ( iterateR
                                                 , mean
                                                 , replace
-                                                , shuffle
                                                 , split
                                                 )
 
@@ -40,7 +40,7 @@ data BotRecords = BotRecords
 getInitBotRecords :: Params -> Rand StdGen BotRecords
 getInitBotRecords params = do
     legss         <- iterateR (makeRandNets (numNrns params) (numNets params)) 6
-    shuffledLegss <- mapM shuffle legss
+    shuffledLegss <- mapM shuffleM legss
     let bots    = map Bot (transpose shuffledLegss)
         fits    = getBotFits (i params) bots
         bestBot = getBestAgent bots fits
@@ -55,7 +55,7 @@ getInitBotRecords params = do
 runBotGA :: Params -> BotRecords -> Rand StdGen BotRecords
 runBotGA params records = do
     newLegss      <- zipWithM (evolveNetPop params) (legss records) (fitss records)
-    shuffledLegss <- mapM shuffle newLegss
+    shuffledLegss <- mapM shuffleM newLegss
     let bots       = map Bot (transpose shuffledLegss)
         fits       = getBotFits (i params) bots
         newBestBot = getBestAgent bots fits
