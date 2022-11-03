@@ -1,12 +1,10 @@
 module Nrn where
 
-import           Control.DeepSeq                ( NFData )
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 , liftRand
                                                 , randomR
                                                 )
-import           GHC.Generics                   ( Generic )
 import           Util                           ( bin2Dec
                                                 , dec2Bin
                                                 , dec2SignedBin
@@ -23,7 +21,7 @@ data Nrn = Nrn
     , getWs  :: [Int]
     , getIWs :: [Int]
     }
-    deriving (Eq, Show, Read, Generic, NFData)
+    deriving (Eq, Show, Read)
 
 getRange :: Char -> (Int, Int)
 getRange 'v' = (0, 15) -- neuron value

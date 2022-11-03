@@ -1,10 +1,8 @@
 module Net where
 
-import           Control.DeepSeq                ( NFData )
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 )
-import           GHC.Generics                   ( Generic )
 import           Nrn                            ( Nrn
                                                 , chrom2Nrn
                                                 , makeRandNrns
@@ -17,7 +15,7 @@ data Net = Net
     , getOutNrn2 :: !Nrn
     , getHidNrns :: [Nrn]
     }
-    deriving (Eq, Show, Read, Generic, NFData)
+    deriving (Eq, Show, Read)
 
 getNrns :: Net -> [Nrn]
 getNrns (Net outNrn1 outNrn2 hidNrns) = outNrn1 : outNrn2 : hidNrns

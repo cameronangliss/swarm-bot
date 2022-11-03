@@ -86,12 +86,10 @@ viewBot params records g = do
     putStrLn "Options:"
     putStrLn "    maxBot     -> print bot with greatest fitness from run"
     putStrLn "    maxFit     -> print greatest fitness from run"
-    putStrLn "    bestBot    -> print specified reference bot from run"
     putStrLn "    bestFits   -> print list of reference fitnesses from run"
     putStrLn "    avgFits    -> print average fitness over all legs from each generation"
     putStrLn "    plotRaw    -> plots unaltered data from run up to desired generation"
     putStrLn "    plotSmooth -> plots smoothed data from run up to desired generation"
-    putStrLn "    plotBest   -> plots movement of bestBot from desired generation"
     putStrLn "    plotMax    -> plots movement of maxBot from desired generation"
     putStrLn "    run        -> resume run with unchanged parameters up to desired generation"
     putStrLn "    change     -> change parameters of run"
@@ -106,13 +104,6 @@ viewBot params records g = do
                 putStrLn ""
                 (print . round . last . BotGA.maxFs) records
                 viewBot params records g
-            | input == "bestBot" = do
-                putStr "\nProvide generation of desired best bot: "
-                bestInd <- readLn
-                putStrLn ""
-                let isValid = bestInd `elem` [0 .. length (bestBs records) - 1]
-                if isValid then print $ bestBs records !! bestInd else putStrLn "Index out of bounds."
-                viewBot params records g
             | input == "bestFits" = do
                 putStrLn ""
                 (print . map round . bestFs) records
@@ -126,9 +117,6 @@ viewBot params records g = do
                 viewBot params records g
             | input == "plotSmooth" = do
                 recordBotRun params records g "smooth"
-                viewBot params records g
-            | input == "plotBest" = do
-                recordBotRun params records g "best"
                 viewBot params records g
             | input == "plotMax" = do
                 recordBotRun params records g "max"
@@ -167,7 +155,7 @@ recordBotRun params records g recordType = do
             then putStr "\nEnter the generation you would like to plot up to: " >> readLn >>= (\x -> return (x + 1))
             else putStr "\nEnter desired generation of bot: " >> readLn >>= (\x -> return (x + 1))
     let truncRecords = getTruncRecords params records numGens
-        bot          = if recordType == "max" then last (maxBs truncRecords) else last (bestBs truncRecords)
+        bot          = if recordType == "max" then last (maxBs truncRecords) else bestB truncRecords
     writeDataFile params truncRecords bot
     callCommand $ unwords ["python src\\PlotBotData.py", "Bot_" ++ show params, recordType, show (numGens - 1)]
     if recordType == "default"
@@ -182,10 +170,9 @@ getTruncRecords params records numGens =
     let numRecordBreaks = (countRecordBreaks . take numGens . BotGA.maxFs) records
         newMaxBs        = take numRecordBreaks (maxBs records)
         newMaxFs        = take numGens (BotGA.maxFs records)
-        newBestBs       = take numGens (bestBs records)
         newBestFs       = take numGens (bestFs records)
         newAvgFs        = take numGens (BotGA.avgFs records)
-    in  BotRecords newMaxBs newMaxFs newBestBs newBestFs newAvgFs (legss records) (fitss records)
+    in  BotRecords newMaxBs newMaxFs (bestB records) newBestFs newAvgFs (legss records) (fitss records)
 
 writeDataFile :: Params -> BotRecords -> Bot -> IO ()
 writeDataFile params records bot = do
@@ -294,9 +281,9 @@ getParams currSeed = do
     numNrns <- getIntLine "numNrns = "
     iter    <- getIntLine "iter = "
     mut     <- getFloatLine "mut = "
-    putStrLn "Turn elitism on? (y/n)"
-    input <- getLine
-    let elitism = input == "y"
+    putStr "Turn elitism on? (y/n): "
+    elitismInput <- getLine
+    let elitism = elitismInput == "y"
     seed <- maybe (getIntLine "Initial RNG seed = ") return currSeed
     let params = Params numNets numNrns iter mut elitism seed
     putStr "Are these values all correct? (y/n): "

@@ -1,10 +1,8 @@
 module Bot where
 
-import           Control.DeepSeq                ( NFData )
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 )
-import           GHC.Generics                   ( Generic )
 import           Net                            ( Net
                                                 , chrom2Net
                                                 , makeRandNets
@@ -12,7 +10,7 @@ import           Net                            ( Net
                                                 )
 import           Util                           ( iterateR )
 
-newtype Bot = Bot {getNets :: [Net]} deriving (Eq, Show, Read, Generic, NFData)
+newtype Bot = Bot {getNets :: [Net]} deriving (Eq, Show, Read)
 
 --pluralized version of below function
 makeRandBots :: Int -> Int -> Rand StdGen [Bot]

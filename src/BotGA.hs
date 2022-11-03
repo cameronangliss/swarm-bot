@@ -27,7 +27,7 @@ import           Util                           ( iterateR
 data BotRecords = BotRecords
     { maxBs  :: [Bot]
     , maxFs  :: [Float]
-    , bestBs :: [Bot]
+    , bestB  :: Bot
     , bestFs :: [Float]
     , avgFs  :: [Float]
     , legss  :: [[Net]]
@@ -49,7 +49,7 @@ getInitBotRecords params = do
         maxFit  = bestFit
         avgFit  = mean fits
         fitss   = transpose $ map (replicate 6) fits
-        records = BotRecords [maxBot] [maxFit] [bestBot] [bestFit] [avgFit] shuffledLegss fitss
+        records = BotRecords [maxBot] [maxFit] bestBot [bestFit] [avgFit] shuffledLegss fitss
     return records
 
 runBotGA :: Params -> BotRecords -> Rand StdGen BotRecords
@@ -64,9 +64,9 @@ runBotGA params records = do
         newMaxFit  = max newBestFit (last $ maxFs records)
         newAvgFit  = mean fits
         newFitss   = transpose $ map (replicate 6) fits
-        newRecords = BotRecords (maxBs records ++ [newMaxBot])
+        newRecords = BotRecords (maxBs records ++ [newMaxBot | newBestFit > last (maxFs records)])
                                 (maxFs records ++ [newMaxFit])
-                                (bestBs records ++ [newBestBot])
+                                newBestBot
                                 (bestFs records ++ [newBestFit])
                                 (avgFs records ++ [newAvgFit])
                                 shuffledLegss
