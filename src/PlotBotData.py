@@ -12,30 +12,25 @@ def mkPlotFiles():
         plotFits()
         plotLegMotions()
         plotBotPath()
-    elif recordType == "raw" or recordType == "smooth":
+    elif recordType == "evo":
         plotFits()
-    elif recordType == "ref" or recordType == "max":
+    elif recordType == "best":
         plotLegMotions()
         plotBotPath()
 
 
 def plotFits():
-    xs = list(range(len(maxFits)))
-    maxPlot = plt.plot(xs, maxFits, color="black", linewidth=1.2, label="MaxFits")
-    bestPlot = plt.plot(
-        xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
-    )
+    xs = list(range(len(bestFits)))
+    bestPlot = plt.plot(xs, bestFits, color="black", linewidth=1.2, label="BestFits")
     avgPlot = plt.plot(xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits")
     plt.xlabel("Generation")
     plt.ylabel("Fitness (mm)")
-    plt.title("Bot Evolution\nBest Fitness = " + str(round(maxFits[-1])) + " mm")
+    plt.title("Bot Evolution\nBest Fitness = " + str(round(bestFits[-1])) + " mm")
     plt.legend()
     if recordType == "default":
         endLabel = "_currentBotEvolution.png"
-    elif recordType == "raw":
-        endLabel = "_gen" + botGen + "rawBotEvolution.png"
-    elif recordType == "smooth":
-        endLabel = "_gen" + botGen + "smoothBotEvolution.png"
+    else:
+        endLabel = "_gen" + botGen + "BotEvolution.png"
     fileName = ".stack-work\\plots\\" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
@@ -151,7 +146,6 @@ name = sys.argv[1]
 recordType = sys.argv[2]
 botGen = sys.argv[3]
 dataFile = open(".stack-work\\datafile.txt", "r")
-maxFits = interpLstStr(dataFile.readline()[:-1])
 bestFits = interpLstStr(dataFile.readline()[:-1])
 avgFits = interpLstStr(dataFile.readline()[:-1])
 legMoves = interpLstStr(dataFile.readline()[:-1])
@@ -178,32 +172,4 @@ elif recordType == "best":
         + str(round(bestFits[-1]))
         + " mm"
     )
-elif recordType == "max":
-    legTitle = (
-        "MaxBot's Leg Motions at Generation "
-        + botGen
-        + "\nFitness = "
-        + str(round(maxFits[-1]))
-        + " mm"
-    )
-    pathTitle = (
-        "MaxBot's Path on Floor at Generation "
-        + botGen
-        + "\nFitness = "
-        + str(round(maxFits[-1]))
-        + " mm"
-    )
-if recordType == "smooth":
-    lists = []
-    for lst in [bestFits, avgFits, bestFits]:
-        r_smooth_spline = robjects.r["smooth.spline"]
-        r_x = robjects.FloatVector(range(len(lst)))
-        r_y = robjects.FloatVector(lst)
-        kwargs = {"x": r_x, "y": r_y, "lambda": 1e-3}
-        spline = r_smooth_spline(**kwargs)
-        newLst = robjects.r["predict"](spline, r_x).rx2("y")
-        lists += [newLst]
-    bestFits = lists[0]
-    avgFits = lists[1]
-    refFits = lists[2]
 mkPlotFiles()

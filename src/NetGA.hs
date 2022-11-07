@@ -60,11 +60,14 @@ data NetRecords = NetRecords
 startNetGA :: Params -> Rand StdGen NetRecords
 startNetGA params = do
     nets <- makeRandNets (numNrns params) (numNets params)
-    let fits    = map (getNetFit $ i params) nets
-        maxNet  = getBestAgent nets fits
-        maxFit  = maximum fits
-        avgFit  = mean fits
-        records = NetRecords [maxNet] [maxFit] [avgFit] nets fits
+    let fits        = map (getNetFit $ i params) nets
+        maxNet      = getBestAgent nets fits
+        maxFit      = maximum fits
+        avgFit      = mean fits
+        maxNetIndex = head [ n | n <- [0 .. length fits - 1], fits !! n == maxFit ]
+        ordNets     = if elitism params then maxNet : remove maxNetIndex nets else nets
+        ordFits     = if elitism params then maxFit : remove maxNetIndex fits else fits
+        records     = NetRecords [maxNet] [maxFit] [avgFit] ordNets ordFits
     return records
 
 runNetGA :: Params -> NetRecords -> Rand StdGen NetRecords
@@ -89,7 +92,7 @@ getBestAgent agents fits = fst $ foldl agentMax (head agents, head fits) (zip ag
 evolveNetPop :: Params -> [Net] -> [Float] -> Rand StdGen [Net]
 evolveNetPop params nets fits
     | elitism params = do
-        let eliteNet = head [ nets !! n | n <- [0 .. length fits], fits !! n == maximum fits ]
+        let eliteNet = head nets
         newNets <- iterateR (getNextNetChild nets fits (mut params)) (numNets params - 1)
         return (eliteNet : newNets)
     | otherwise = iterateR (getNextNetChild nets fits (mut params)) (numNets params)

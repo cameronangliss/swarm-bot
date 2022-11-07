@@ -26,7 +26,6 @@ dependencies:
 - parallel
 - process
 - random
-- random-shuffle
 - splitmix
 - time
 

@@ -62,7 +62,7 @@ newBotMain = do
     params <- getParams Nothing
     putStr "\nInitializing generation 0..."
     let (records, g) = runRand (getInitBotRecords params) (mkStdGen $ s params)
-        !maxFit      = last (BotGA.maxFs records)
+        !maxFit      = last (bestFs records)
     putStrLn "Success!"
     viewBot params records g
 
@@ -73,7 +73,7 @@ loadBotMain = do
     recordStr <- readFile (".stack-work\\runs\\Bot_" ++ show params ++ ".txt")
     let (records, smgen) = read recordStr :: (BotRecords, SMGen)
         g                = StdGen smgen
-        !maxFit          = last (BotGA.maxFs records)
+        !maxFit          = last (bestFs records)
     putStrLn "Success!"
     viewBot params records g
 
@@ -81,28 +81,27 @@ viewBot :: Params -> BotRecords -> StdGen -> IO ()
 viewBot params records g = do
     putStrLn
         $  "\nCompleted "
-        ++ (show . subtract 1 . length . BotGA.maxFs) records
+        ++ (show . subtract 1 . length . bestFs) records
         ++ " generations. What would you like to do?"
     putStrLn "Options:"
-    putStrLn "    maxBot     -> print bot with greatest fitness from run"
-    putStrLn "    maxFit     -> print greatest fitness from run"
-    putStrLn "    bestFits   -> print list of reference fitnesses from run"
-    putStrLn "    avgFits    -> print average fitness over all legs from each generation"
-    putStrLn "    plotRaw    -> plots unaltered data from run up to desired generation"
-    putStrLn "    plotSmooth -> plots smoothed data from run up to desired generation"
-    putStrLn "    plotMax    -> plots movement of maxBot from desired generation"
-    putStrLn "    run        -> resume run with unchanged parameters up to desired generation"
-    putStrLn "    change     -> change parameters of run"
-    putStrLn "    back       -> return to main menu"
+    putStrLn "    bestBot  -> print bot with greatest fitness from run"
+    putStrLn "    bestFit  -> print greatest fitness from run"
+    putStrLn "    bestFits -> print list of reference fitnesses from run"
+    putStrLn "    avgFits  -> print average fitness over all legs from each generation"
+    putStrLn "    plotEvo  -> plots unaltered data from run up to desired generation"
+    putStrLn "    plotBest -> plots movement of maxBot from desired generation"
+    putStrLn "    run      -> resume run with unchanged parameters up to desired generation"
+    putStrLn "    change   -> change parameters of run"
+    putStrLn "    back     -> return to main menu"
     input <- getLine
     let action
-            | input == "maxBot" = do
+            | input == "bestBot" = do
                 putStrLn ""
-                (print . last . BotGA.maxBs) records
+                (print . last . bestBs) records
                 viewBot params records g
-            | input == "maxFit" = do
+            | input == "bestFit" = do
                 putStrLn ""
-                (print . round . last . BotGA.maxFs) records
+                (print . round . last . bestFs) records
                 viewBot params records g
             | input == "bestFits" = do
                 putStrLn ""
@@ -112,14 +111,11 @@ viewBot params records g = do
                 putStrLn ""
                 (print . map round . BotGA.avgFs) records
                 viewBot params records g
-            | input == "plotRaw" = do
-                recordBotRun params records g "raw"
+            | input == "plotEvo" = do
+                recordBotRun params records g "evo"
                 viewBot params records g
-            | input == "plotSmooth" = do
-                recordBotRun params records g "smooth"
-                viewBot params records g
-            | input == "plotMax" = do
-                recordBotRun params records g "max"
+            | input == "plotBest" = do
+                recordBotRun params records g "best"
                 viewBot params records g
             | input == "run" = do
                 putStr "\nEnter desired generation to compute up to: "
@@ -142,7 +138,7 @@ computeBotRun :: Params -> BotRecords -> StdGen -> Int -> IO (BotRecords, StdGen
 computeBotRun params records g genCap = do
     putStr $ "\nComputing up to generation " ++ show (length $ bestFs records) ++ "..."
     let (newRecords, g2) = runRand (runBotGA params records) g
-        !maxFit          = last (BotGA.maxFs newRecords)
+        !maxFit          = last (bestFs newRecords)
     putStrLn "Finished!"
     when (length (bestFs newRecords) `mod` 100 == 1) $ recordBotRun params newRecords g2 "default"
     if genCap < length (bestFs newRecords) then return (newRecords, g2) else computeBotRun params newRecords g2 genCap
@@ -151,11 +147,11 @@ recordBotRun :: Params -> BotRecords -> StdGen -> String -> IO ()
 recordBotRun params records g recordType = do
     numGens <- if recordType == "default"
         then (return . length . bestFs) records
-        else if recordType == "raw" || recordType == "smooth"
+        else if recordType == "evo"
             then putStr "\nEnter the generation you would like to plot up to: " >> readLn >>= (\x -> return (x + 1))
             else putStr "\nEnter desired generation of bot: " >> readLn >>= (\x -> return (x + 1))
     let truncRecords = getTruncRecords params records numGens
-        bot          = if recordType == "max" then last (maxBs truncRecords) else bestB truncRecords
+        bot          = last (bestBs truncRecords)
     writeDataFile params truncRecords bot
     callCommand $ unwords ["python src\\PlotBotData.py", "Bot_" ++ show params, recordType, show (numGens - 1)]
     if recordType == "default"
@@ -167,12 +163,11 @@ recordBotRun params records g recordType = do
 
 getTruncRecords :: Params -> BotRecords -> Int -> BotRecords
 getTruncRecords params records numGens =
-    let numRecordBreaks = (countRecordBreaks . take numGens . BotGA.maxFs) records
-        newMaxBs        = take numRecordBreaks (maxBs records)
-        newMaxFs        = take numGens (BotGA.maxFs records)
+    let numRecordBreaks = (countRecordBreaks . take numGens . bestFs) records
+        newBestBs       = take numRecordBreaks (bestBs records)
         newBestFs       = take numGens (bestFs records)
         newAvgFs        = take numGens (BotGA.avgFs records)
-    in  BotRecords newMaxBs newMaxFs (bestB records) newBestFs newAvgFs (legss records) (fitss records)
+    in  BotRecords newBestBs newBestFs newAvgFs (legss records) (fitss records)
 
 writeDataFile :: Params -> BotRecords -> Bot -> IO ()
 writeDataFile params records bot = do
@@ -180,7 +175,7 @@ writeDataFile params records bot = do
         unzippedLegMoves = map (fromTup . unzip) legMoves
         botPath          = getBotPath (i params) bot
         unzippedBotPath  = fromTup (unzip botPath)
-        fitsTxt          = (unlines . map show) [BotGA.maxFs records, bestFs records, BotGA.avgFs records]
+        fitsTxt          = (unlines . map show) [bestFs records, BotGA.avgFs records]
     writeFile ".stack-work\\datafile.txt" $ fitsTxt ++ show unzippedLegMoves ++ "\n" ++ show unzippedBotPath
 
 ---------------------------------------- LEG MAIN ----------------------------------------
