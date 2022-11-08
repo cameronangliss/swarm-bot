@@ -1,6 +1,10 @@
 module BotSim where
 
 import           Bot                            ( Bot(..) )
+import           Control.Monad                  ( zipWithM )
+import           Control.Monad.Random           ( liftRand
+                                                , random
+                                                )
 import           Net                            ( Net
                                                 , getNrns
                                                 )
@@ -8,12 +12,14 @@ import           NetSim                         ( TestData(poss, s1, s2, s3)
                                                 , defaultTestData
                                                 , testNetr
                                                 )
-import           Util                           ( fromIntTup )
+import           Util                           ( fromIntTup
+                                                , remove
+                                                )
 
 data PathData = PathData
-    { x    :: !Float
-    , y    :: !Float
-    , dir  :: !Float
+    { x    :: Float
+    , y    :: Float
+    , dir  :: Float
     , path :: [(Float, Float)]
     }
     deriving (Show, Read)
@@ -23,13 +29,6 @@ botWidth = 240
 
 defaultPathData :: PathData
 defaultPathData = PathData 0 0 0 [(0, 0)]
-
-getBotFits :: Int -> [Bot] -> [Float]
-getBotFits iter = map (getBotFit iter)
-
--- calculates the fitness of a bot
-getBotFit :: Int -> Bot -> Float
-getBotFit iter = fst . last . getBotPath iter
 
 -- transforms the positional data from a bot's simulated run from horiz/vert data of every leg into incremental radial data of the overall robot's position in 2D space
 getBotPath :: Int -> Bot -> [(Float, Float)]

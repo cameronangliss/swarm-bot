@@ -6,6 +6,7 @@ import           Control.Monad.Random           ( Rand
                                                 , randomR
                                                 )
 import           Util                           ( bin2Dec
+                                                , chunksOf
                                                 , dec2Bin
                                                 , dec2SignedBin
                                                 , iterateR
@@ -15,9 +16,9 @@ import           Util                           ( bin2Dec
                                                 )
 
 data Nrn = Nrn
-    { getV   :: !Int
-    , getT   :: !Int
-    , getS   :: !Int
+    { getV   :: Int
+    , getT   :: Int
+    , getS   :: Int
     , getWs  :: [Int]
     , getIWs :: [Int]
     }
@@ -47,41 +48,14 @@ makeRandNrn numNrns isHidden = do
     iWs <- iterateR (liftRand . randomR . getRange $ 'w') (if isHidden then 5 else 3)
     return (Nrn v t s ws iWs)
 
-nrn2Chrom :: Nrn -> Maybe [String]
-nrn2Chrom (Nrn v t s ws iWs) = do
-    vC   <- num2Chrom 'v' v
-    tC   <- num2Chrom 't' t
-    sC   <- num2Chrom 's' s
-    wCs  <- mapM (num2Chrom 'w') ws
-    iWCs <- mapM (num2Chrom 'w') iWs
-    let chrom = vC : tC : sC : wCs ++ iWCs
-    return chrom
-
-chrom2Nrn :: Int -> [String] -> Maybe Nrn
-chrom2Nrn numNrns chrom = do
-    v <- chrom2Num 'v' (head chrom)
-    t <- chrom2Num 't' (chrom !! 1)
-    s <- chrom2Num 's' (chrom !! 2)
-    let (wCs, iWCs) = splitAt numNrns (drop 3 chrom)
-    ws  <- mapM (chrom2Num 'w') wCs
-    iWs <- mapM (chrom2Num 'w') iWCs
-    let nrn = Nrn v t s ws iWs
-    return nrn
-
--- formatted binary string to decimal
-chrom2Num :: Char -> String -> Maybe Int
-chrom2Num char chrom =
-    let (minVal, maxVal) = getRange char
-        num              = if minVal < 0 then signedBin2Dec chrom else bin2Dec chrom
-    in  toMaybe (num >= minVal && num <= maxVal) num
-
--- decimal to formatted binary string
-num2Chrom :: Char -> Int -> Maybe String
-num2Chrom char num =
+toBin :: Char -> Int -> String
+toBin char num =
     let (minVal, maxVal) = getRange char
         unpaddedBin      = if minVal < 0 then dec2SignedBin num else dec2Bin num
-        paddedBin        = getPaddedBin char unpaddedBin
-    in  toMaybe (num >= minVal && num <= maxVal) paddedBin
+    in  getPaddedBin char unpaddedBin
+
+fromBin :: Char -> String -> Int
+fromBin char chrom = if minVal < 0 then signedBin2Dec chrom else bin2Dec chrom where (minVal, maxVal) = getRange char
 
 getPaddedBin :: Char -> String -> String
 getPaddedBin char bin =

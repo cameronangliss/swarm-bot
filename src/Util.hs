@@ -33,6 +33,10 @@ remove i xs = take i xs ++ drop (i + 1) xs
 split :: Char -> String -> [String]
 split c = words . map (\x -> if x == c then ' ' else x)
 
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf n [] = []
+chunksOf n xs = take n xs : chunksOf n (drop n xs)
+
 countRecordBreaks :: Ord a => [a] -> Int
 countRecordBreaks []             = 0
 countRecordBreaks [x           ] = 1

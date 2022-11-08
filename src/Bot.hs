@@ -4,9 +4,7 @@ import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 )
 import           Net                            ( Net
-                                                , chrom2Net
                                                 , makeRandNets
-                                                , net2Chrom
                                                 )
 import           Util                           ( iterateR )
 
@@ -21,11 +19,3 @@ makeRandBot :: Int -> Rand StdGen Bot
 makeRandBot numNrns = do
     nets <- makeRandNets numNrns 6
     return (Bot nets)
-
--- converts a bot to a chromosome
-bot2Chrom :: Bot -> Maybe [[[String]]]
-bot2Chrom = mapM net2Chrom . getNets
-
--- converts a chromosome to a bot
-chrom2Bot :: [[[String]]] -> Maybe Bot
-chrom2Bot chrom = mapM chrom2Net chrom >>= (Just . Bot)

@@ -2,17 +2,19 @@ module Net where
 
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
+                                                , liftRand
+                                                , random
                                                 )
 import           Nrn                            ( Nrn
-                                                , chrom2Nrn
                                                 , makeRandNrns
-                                                , nrn2Chrom
                                                 )
-import           Util                           ( iterateR )
+import           Util                           ( iterateR
+                                                , remove
+                                                )
 
 data Net = Net
-    { getOutNrn1 :: !Nrn
-    , getOutNrn2 :: !Nrn
+    { getOutNrn1 :: Nrn
+    , getOutNrn2 :: Nrn
     , getHidNrns :: [Nrn]
     }
     deriving (Eq, Show, Read)
@@ -33,11 +35,3 @@ makeRandNet numNrns = do
     hidNrns <- makeRandNrns numNrns True (numNrns - 2)
     outNrns <- makeRandNrns numNrns False 2
     return (Net (head outNrns) (last outNrns) hidNrns)
-
--- converts a neural network to a chromosome
-net2Chrom :: Net -> Maybe [[String]]
-net2Chrom = mapM nrn2Chrom . getNrns
-
--- converts a chromosome to a neural network
-chrom2Net :: [[String]] -> Maybe Net
-chrom2Net nrnChroms = mapM (chrom2Nrn $ length nrnChroms) nrnChroms >>= (Just . makeNet)

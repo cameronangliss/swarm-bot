@@ -1,5 +1,11 @@
 module NetSim where
 
+import           Control.Monad                  ( zipWithM )
+import           Control.Monad.Random           ( Rand
+                                                , StdGen
+                                                , liftRand
+                                                , random
+                                                )
 import           Net                            ( Net(..)
                                                 , getNrns
                                                 , makeNet
@@ -13,13 +19,13 @@ import           Util                           ( fromIntTup
                                                 )
 
 data TestData = TestData
-    { s1   :: !Int
-    , s2   :: !Int
-    , s3   :: !Int
-    , x    :: !Int
-    , y    :: !Int
-    , xMom :: !Int
-    , yMom :: !Int
+    { s1   :: Int
+    , s2   :: Int
+    , s3   :: Int
+    , x    :: Int
+    , y    :: Int
+    , xMom :: Int
+    , yMom :: Int
     , poss :: [(Int, Int)]
     }
     deriving (Show, Read)
@@ -34,11 +40,6 @@ xLst = [0, 1, 7, 16, 28, 41, 52, 63, 71, 75, 77, 76, 73, 73, 73, 73]
 -- experimentally derived vert positions for bot
 yLst :: [Int]
 yLst = [0, 0, 3, 8, 14, 21, 28, 34, 39, 43, 45, 48, 49, 49, 49, 49]
-
--- calculates the fitness of a list of legs
--- this is by far the most computationally intensive function in the file due to the intensity of the simulation, so use sparingly
-getNetFit :: Int -> Net -> Float
-getNetFit iter = forwardMoveLeg . map fromIntTup . testNet iter
 
 -- calculates the forward movement of a leg given its positional data from a simulation run
 forwardMoveLeg :: [(Float, Float)] -> Float

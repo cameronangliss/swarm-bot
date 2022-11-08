@@ -32,8 +32,10 @@ dependencies:
 
 default-extensions:
 - BangPatterns
-- DeriveAnyClass
-- DeriveGeneric
+- FlexibleInstances
+- FunctionalDependencies
+- MultiParamTypeClasses
+- StrictData
 
 library:
   source-dirs: src

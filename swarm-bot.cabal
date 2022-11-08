@@ -28,11 +28,13 @@ library
       Bot
       BotGA
       BotSim
+      Chromable
       Main
       Net
       NetGA
       NetSim
       Nrn
+      Trainable
       Util
   other-modules:
       Paths_swarm_bot
@@ -40,8 +42,10 @@ library
       src
   default-extensions:
       BangPatterns
-      DeriveAnyClass
-      DeriveGeneric
+      FlexibleInstances
+      FunctionalDependencies
+      MultiParamTypeClasses
+      StrictData
   build-depends:
       MonadRandom
     , base >=4.7 && <5
@@ -60,18 +64,22 @@ executable swarm-bot-exe
       Bot
       BotGA
       BotSim
+      Chromable
       Net
       NetGA
       NetSim
       Nrn
+      Trainable
       Util
       Paths_swarm_bot
   hs-source-dirs:
       src
   default-extensions:
       BangPatterns
-      DeriveAnyClass
-      DeriveGeneric
+      FlexibleInstances
+      FunctionalDependencies
+      MultiParamTypeClasses
+      StrictData
   ghc-options: -threaded -rtsopts "-with-rtsopts=-N -s" -O2
   build-depends:
       MonadRandom
@@ -95,8 +103,10 @@ test-suite swarm-bot-test
       test
   default-extensions:
       BangPatterns
-      DeriveAnyClass
-      DeriveGeneric
+      FlexibleInstances
+      FunctionalDependencies
+      MultiParamTypeClasses
+      StrictData
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       MonadRandom
