@@ -31,7 +31,6 @@ dependencies:
 - time
 
 default-extensions:
-- BangPatterns
 - FlexibleInstances
 - FunctionalDependencies
 - MultiParamTypeClasses
@@ -50,6 +49,7 @@ executables:
     - -rtsopts
     - '"-with-rtsopts=-N -s"'
     - -O2
+    - -Wextra
     dependencies:
     - swarm-bot
 

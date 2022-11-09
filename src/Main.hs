@@ -21,15 +21,12 @@ import           NetGA                          ( NetRecords(..)
 import           NetSim                         ( testNet )
 import           System.IO                      ( BufferMode(NoBuffering)
                                                 , hSetBuffering
-                                                , readFile
                                                 , stdout
-                                                , writeFile
                                                 )
 import           System.Process                 ( callCommand )
 import           System.Random.Internal         ( StdGen(..) )
 import           System.Random.SplitMix         ( SMGen )
 import           Util                           ( countRecordBreaks
-                                                , formatTime
                                                 , fromTup
                                                 )
 
@@ -62,7 +59,6 @@ newBotMain = do
     params <- getParams Nothing
     putStr "\nInitializing generation 0..."
     let (records, g) = runRand (getInitBotRecords params) (mkStdGen $ s params)
-        !maxFit      = last (BotGA.maxFs records)
     putStrLn "Success!"
     viewBot params records g
 
@@ -73,7 +69,6 @@ loadBotMain = do
     recordStr <- readFile (".stack-work\\runs\\Bot_" ++ show params ++ ".txt")
     let (records, smgen) = read recordStr :: (BotRecords, SMGen)
         g                = StdGen smgen
-        !maxFit          = last (BotGA.maxFs records)
     putStrLn "Success!"
     viewBot params records g
 
@@ -118,7 +113,6 @@ computeBotRun :: Params -> BotRecords -> StdGen -> Int -> IO (BotRecords, StdGen
 computeBotRun params records g genCap = do
     putStr $ "\nComputing up to generation " ++ (show . length . bestFs) records ++ "..."
     let (newRecords, g2) = runRand (runBotGA params records) g
-        !maxFit          = last (BotGA.maxFs newRecords)
     putStrLn "Finished!"
     when (length (bestFs newRecords) `mod` 100 == 1) $ recordBotRun params newRecords g2 "default"
     if genCap < length (bestFs newRecords) then return (newRecords, g2) else computeBotRun params newRecords g2 genCap
@@ -130,7 +124,7 @@ recordBotRun params records g recordType = do
         else if recordType == "evo"
             then putStr "\nEnter the generation you would like to plot up to: " >> readLn >>= (\x -> return (x + 1))
             else putStr "\nEnter desired generation of bot: " >> readLn >>= (\x -> return (x + 1))
-    let truncRecords = getTruncRecords params records numGens
+    let truncRecords = getTruncRecords records numGens
         bot          = if recordType == "max" then last (maxBs truncRecords) else bestB truncRecords
     writeDataFile params truncRecords bot
     callCommand $ unwords ["python src\\PlotBotData.py", "Bot_" ++ show params, recordType, show (numGens - 1)]
@@ -141,8 +135,8 @@ recordBotRun params records g recordType = do
         else do
             putStrLn "\nPlots drawn."
 
-getTruncRecords :: Params -> BotRecords -> Int -> BotRecords
-getTruncRecords params records numGens =
+getTruncRecords :: BotRecords -> Int -> BotRecords
+getTruncRecords records numGens =
     let numRecordBreaks = (countRecordBreaks . take numGens . BotGA.maxFs) records
         newMaxBs        = take numRecordBreaks (maxBs records)
         newMaxFs        = take numGens (BotGA.maxFs records)
@@ -166,7 +160,6 @@ newLegMain = do
     params <- getParams Nothing
     putStr "\nInitializing generation 0..."
     let (records, g) = runRand (startNetGA params) (mkStdGen $ NetGA.s params)
-        !maxFit      = last (NetGA.maxFs records)
     putStrLn "Success!"
     viewLeg params records g
 
@@ -177,7 +170,6 @@ loadLegMain = do
     recordStr <- readFile (".stack-work\\runs\\" ++ show params ++ ".txt")
     let (records, smgen) = read recordStr :: (NetRecords, SMGen)
         g                = StdGen smgen
-        !maxFit          = last (maxNs records)
     putStrLn "Success!"
     viewLeg params records g
 
@@ -219,7 +211,6 @@ loopLeg :: Params -> NetRecords -> StdGen -> IO ()
 loopLeg params records g = do
     putStr $ "\nComputing generation " ++ (show . length . NetGA.maxFs) records ++ "..."
     let (newRecords, g2) = runRand (runNetGA params records) g
-        !maxFit          = last (NetGA.maxFs newRecords)
     putStrLn "Success!"
     recordLegRun params newRecords g2 False
     loopLeg params newRecords g2

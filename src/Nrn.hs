@@ -6,13 +6,11 @@ import           Control.Monad.Random           ( Rand
                                                 , randomR
                                                 )
 import           Util                           ( bin2Dec
-                                                , chunksOf
                                                 , dec2Bin
                                                 , dec2SignedBin
                                                 , iterateR
                                                 , numsInBtw
                                                 , signedBin2Dec
-                                                , toMaybe
                                                 )
 
 data Nrn = Nrn
@@ -50,18 +48,18 @@ makeRandNrn numNrns isHidden = do
 
 toBin :: Char -> Int -> String
 toBin char num =
-    let (minVal, maxVal) = getRange char
-        unpaddedBin      = if minVal < 0 then dec2SignedBin num else dec2Bin num
+    let (minVal, _) = getRange char
+        unpaddedBin = if minVal < 0 then dec2SignedBin num else dec2Bin num
     in  getPaddedBin char unpaddedBin
 
 fromBin :: Char -> String -> Int
-fromBin char chrom = if minVal < 0 then signedBin2Dec chrom else bin2Dec chrom where (minVal, maxVal) = getRange char
+fromBin char chrom = if minVal < 0 then signedBin2Dec chrom else bin2Dec chrom where (minVal, _) = getRange char
 
 getPaddedBin :: Char -> String -> String
 getPaddedBin char bin =
-    let (minVal, maxVal) = getRange char
-        (b : rest)       = bin
-        extra0s          = replicate (getNumBits char - length bin) '0'
+    let (minVal, _) = getRange char
+        (b : rest)  = bin
+        extra0s     = replicate (getNumBits char - length bin) '0'
         padBin | minVal < 0 = b : (extra0s ++ rest)
                | otherwise  = extra0s ++ bin
     in  padBin

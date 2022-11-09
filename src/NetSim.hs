@@ -1,11 +1,5 @@
 module NetSim where
 
-import           Control.Monad                  ( zipWithM )
-import           Control.Monad.Random           ( Rand
-                                                , StdGen
-                                                , liftRand
-                                                , random
-                                                )
 import           Net                            ( Net(..)
                                                 , getNrns
                                                 , makeNet
@@ -13,8 +7,7 @@ import           Net                            ( Net(..)
 import           Nrn                            ( Nrn(..)
                                                 , setV
                                                 )
-import           Util                           ( fromIntTup
-                                                , remove
+import           Util                           ( remove
                                                 , replace
                                                 )
 
@@ -43,9 +36,9 @@ yLst = [0, 0, 3, 8, 14, 21, 28, 34, 39, 43, 45, 48, 49, 49, 49, 49]
 
 -- calculates the forward movement of a leg given its positional data from a simulation run
 forwardMoveLeg :: [(Float, Float)] -> Float
-forwardMoveLeg []                              = 0
-forwardMoveLeg [pos                          ] = 0
-forwardMoveLeg ((x1, y1) : (x2, y2) : posTail) = (x2 - x1) / (1 + y2) + forwardMoveLeg ((x2, y2) : posTail)
+forwardMoveLeg []                             = 0
+forwardMoveLeg [_                           ] = 0
+forwardMoveLeg ((x1, _) : (x2, y2) : posTail) = (x2 - x1) / (1 + y2) + forwardMoveLeg ((x2, y2) : posTail)
 
 -- runs a simulation of an individual leg walking for the given number of iterations, returns the leg's positional data throughout the simulation
 testNet :: Int -> Net -> [(Int, Int)]

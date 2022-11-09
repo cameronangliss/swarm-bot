@@ -2,18 +2,13 @@ module NetGA where
 
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
-                                                , liftRand
-                                                , random
                                                 )
-import           Data.Maybe                     ( fromMaybe )
 import           Net                            ( Net
                                                 , makeRandNets
                                                 )
 import           Trainable                      ( Trainable(..) )
-import           Util                           ( fromIntTup
-                                                , iterateR
+import           Util                           ( iterateR
                                                 , mean
-                                                , remove
                                                 , split
                                                 )
 
@@ -94,6 +89,6 @@ evolveNetPop params nets fits
 
 getNextNetChild :: [Net] -> [Float] -> Float -> Rand StdGen Net
 getNextNetChild nets fits mut = do
-    (parents, fits) <- select 2 nets fits
-    child           <- cross (head parents) (last parents)
+    (parents, _) <- select 2 nets fits
+    child        <- cross (head parents) (last parents)
     mutate mut child

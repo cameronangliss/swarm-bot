@@ -2,15 +2,11 @@ module Net where
 
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
-                                                , liftRand
-                                                , random
                                                 )
 import           Nrn                            ( Nrn
                                                 , makeRandNrns
                                                 )
-import           Util                           ( iterateR
-                                                , remove
-                                                )
+import           Util                           ( iterateR )
 
 data Net = Net
     { getOutNrn1 :: Nrn

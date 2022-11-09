@@ -4,8 +4,6 @@ import           Bot                            ( Bot(..) )
 import           Control.Monad                  ( zipWithM )
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
-                                                , liftRand
-                                                , random
                                                 )
 import           Data.List                      ( transpose )
 import           Net                            ( Net
@@ -19,9 +17,6 @@ import           System.Random.Shuffle          ( shuffleM )
 import           Trainable                      ( Trainable(..) )
 import           Util                           ( iterateR
                                                 , mean
-                                                , remove
-                                                , replace
-                                                , split
                                                 )
 
 data BotRecords = BotRecords

@@ -1,10 +1,6 @@
 module BotSim where
 
 import           Bot                            ( Bot(..) )
-import           Control.Monad                  ( zipWithM )
-import           Control.Monad.Random           ( liftRand
-                                                , random
-                                                )
 import           Net                            ( Net
                                                 , getNrns
                                                 )
@@ -12,9 +8,7 @@ import           NetSim                         ( TestData(poss, s1, s2, s3)
                                                 , defaultTestData
                                                 , testNetr
                                                 )
-import           Util                           ( fromIntTup
-                                                , remove
-                                                )
+import           Util                           ( fromIntTup )
 
 data PathData = PathData
     { x    :: Float
@@ -35,7 +29,7 @@ getBotPath :: Int -> Bot -> [(Float, Float)]
 getBotPath iter bot = getBotPathr fPosLsts defaultPathData where fPosLsts = (map . map) fromIntTup $ testBot iter bot
 
 getBotPathr :: [[(Float, Float)]] -> PathData -> [(Float, Float)]
-getBotPathr ([pos] : posLsts) pathData = path pathData
+getBotPathr ([_] : _) pathData = path pathData
 getBotPathr posLsts pathData =
     let verts             = [ snd $ posLst !! 1 | posLst <- posLsts ] -- list of y pos of all legs of bot at current iteration
         dragFactor        = getDragFactor verts
@@ -88,7 +82,7 @@ testBot iter bot = testBotr numNrns iter (getNets bot) (replicate 6 defaultTestD
     where numNrns = (length . getNrns . head . getNets) bot
 
 testBotr :: Int -> Int -> [Net] -> [TestData] -> [[(Int, Int)]]
-testBotr _ 0 nets testDataLst = map poss testDataLst
+testBotr _ 0 _ testDataLst = map poss testDataLst
 testBotr numNrns iter nets testDataLst =
     let sLsts                     = [ [s1Lst !! n, s2Lst !! n, s3Lst !! n] | n <- [0 .. length testDataLst - 1] ]
         s3Lst                     = map s3 testDataLst

@@ -2,9 +2,6 @@ module Util where
 
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
-                                                , liftRand
-                                                , random
-                                                , randomR
                                                 )
 
 -- iterates through a given function, returning a list of all outcomes of the function throughout all the calls made to it
@@ -34,12 +31,12 @@ split :: Char -> String -> [String]
 split c = words . map (\x -> if x == c then ' ' else x)
 
 chunksOf :: Int -> [a] -> [[a]]
-chunksOf n [] = []
+chunksOf _ [] = []
 chunksOf n xs = take n xs : chunksOf n (drop n xs)
 
 countRecordBreaks :: Ord a => [a] -> Int
 countRecordBreaks []             = 0
-countRecordBreaks [x           ] = 1
+countRecordBreaks [_           ] = 1
 countRecordBreaks (x1 : x2 : xs) = (if x1 < x2 then 1 else 0) + countRecordBreaks (x2 : xs)
 
 bin2Dec :: String -> Int
