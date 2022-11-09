@@ -81,42 +81,18 @@ viewBot :: Params -> BotRecords -> StdGen -> IO ()
 viewBot params records g = do
     putStrLn
         $  "\nCompleted "
-        ++ (show . subtract 1 . length . BotGA.maxFs) records
+        ++ (show . subtract 1 . length . bestFs) records
         ++ " generations. What would you like to do?"
     putStrLn "Options:"
-    putStrLn "    maxBot     -> print bot with greatest fitness from run"
-    putStrLn "    maxFit     -> print greatest fitness from run"
-    putStrLn "    bestFits   -> print list of reference fitnesses from run"
-    putStrLn "    avgFits    -> print average fitness over all legs from each generation"
-    putStrLn "    plotRaw    -> plots unaltered data from run up to desired generation"
-    putStrLn "    plotSmooth -> plots smoothed data from run up to desired generation"
-    putStrLn "    plotMax    -> plots movement of maxBot from desired generation"
-    putStrLn "    run        -> resume run with unchanged parameters up to desired generation"
-    putStrLn "    change     -> change parameters of run"
-    putStrLn "    back       -> return to main menu"
+    putStrLn "    plotEvo -> plots unaltered data from run up to desired generation"
+    putStrLn "    plotMax -> plots movement of bestBot from desired generation"
+    putStrLn "    run     -> resume run with unchanged parameters up to desired generation"
+    putStrLn "    change  -> change parameters of run"
+    putStrLn "    back    -> return to main menu"
     input <- getLine
     let action
-            | input == "maxBot" = do
-                putStrLn ""
-                (print . last . BotGA.maxBs) records
-                viewBot params records g
-            | input == "maxFit" = do
-                putStrLn ""
-                (print . round . last . BotGA.maxFs) records
-                viewBot params records g
-            | input == "bestFits" = do
-                putStrLn ""
-                (print . map round . bestFs) records
-                viewBot params records g
-            | input == "avgFits" = do
-                putStrLn ""
-                (print . map round . BotGA.avgFs) records
-                viewBot params records g
-            | input == "plotRaw" = do
-                recordBotRun params records g "raw"
-                viewBot params records g
-            | input == "plotSmooth" = do
-                recordBotRun params records g "smooth"
+            | input == "plotEvo" = do
+                recordBotRun params records g "evo"
                 viewBot params records g
             | input == "plotMax" = do
                 recordBotRun params records g "max"
@@ -140,7 +116,7 @@ viewBot params records g = do
 
 computeBotRun :: Params -> BotRecords -> StdGen -> Int -> IO (BotRecords, StdGen)
 computeBotRun params records g genCap = do
-    putStr $ "\nComputing up to generation " ++ show (length $ bestFs records) ++ "..."
+    putStr $ "\nComputing up to generation " ++ (show . length . bestFs) records ++ "..."
     let (newRecords, g2) = runRand (runBotGA params records) g
         !maxFit          = last (BotGA.maxFs newRecords)
     putStrLn "Finished!"
@@ -151,7 +127,7 @@ recordBotRun :: Params -> BotRecords -> StdGen -> String -> IO ()
 recordBotRun params records g recordType = do
     numGens <- if recordType == "default"
         then (return . length . bestFs) records
-        else if recordType == "raw" || recordType == "smooth"
+        else if recordType == "evo"
             then putStr "\nEnter the generation you would like to plot up to: " >> readLn >>= (\x -> return (x + 1))
             else putStr "\nEnter desired generation of bot: " >> readLn >>= (\x -> return (x + 1))
     let truncRecords = getTruncRecords params records numGens
@@ -277,15 +253,16 @@ getParams currSeed = do
             input <- getLine
             readIO input :: IO Float
     putStrLn "\nEnter parameters:"
-    numNets <- getIntLine "numNets = "
-    numNrns <- getIntLine "numNrns = "
-    iter    <- getIntLine "iter = "
-    mut     <- getFloatLine "mut = "
+    numNets  <- getIntLine "numNets = "
+    numNrns  <- getIntLine "numNrns = "
+    numTests <- getIntLine "numTests = "
+    iter     <- getIntLine "iter = "
+    mut      <- getFloatLine "mut = "
     putStr "Turn elitism on? (y/n): "
     elitismInput <- getLine
     let elitism = elitismInput == "y"
     seed <- maybe (getIntLine "Initial RNG seed = ") return currSeed
-    let params = Params numNets numNrns iter mut elitism seed
+    let params = Params numNets numNrns numTests iter mut elitism seed
     putStr "Are these values all correct? (y/n): "
     input <- getLine
     let action

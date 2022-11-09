@@ -12,9 +12,9 @@ def mkPlotFiles():
         plotFits()
         plotLegMotions()
         plotBotPath()
-    elif recordType == "raw" or recordType == "smooth":
+    elif recordType == "evo":
         plotFits()
-    elif recordType == "ref" or recordType == "max":
+    elif recordType == "max":
         plotLegMotions()
         plotBotPath()
 
@@ -32,10 +32,8 @@ def plotFits():
     plt.legend()
     if recordType == "default":
         endLabel = "_currentBotEvolution.png"
-    elif recordType == "raw":
-        endLabel = "_gen" + botGen + "rawBotEvolution.png"
-    elif recordType == "smooth":
-        endLabel = "_gen" + botGen + "smoothBotEvolution.png"
+    elif recordType == "evo":
+        endLabel = "_gen" + botGen + "botEvolution.png"
     fileName = ".stack-work\\plots\\" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
@@ -63,8 +61,6 @@ def plotLegMotions():
     plt.title(legTitle)
     if recordType == "default":
         endLabel = "_currentBestBotMotions.png"
-    elif recordType == "best":
-        endLabel = "_gen" + botGen + "bestBotMotions.png"
     elif recordType == "max":
         endLabel = "_gen" + botGen + "maxBotMotions.png"
     fileName = ".stack-work\\plots\\" + name + endLabel
@@ -89,8 +85,6 @@ def plotBotPath():
     plt.title(pathTitle)
     if recordType == "default":
         endLabel = "_currentBestBotPath.png"
-    elif recordType == "best":
-        endLabel = "_gen" + botGen + "bestBotPath.png"
     elif recordType == "max":
         endLabel = "_gen" + botGen + "maxBotPath.png"
     fileName = ".stack-work\\plots\\" + name + endLabel
@@ -163,21 +157,6 @@ if recordType == "default":
     pathTitle = (
         "Current BestBot's Path on Floor\nFitness = " + str(round(bestFits[-1])) + " mm"
     )
-elif recordType == "best":
-    legTitle = (
-        "BestBot's Leg Motions at Generation "
-        + botGen
-        + "\nFitness = "
-        + str(round(bestFits[-1]))
-        + " mm"
-    )
-    pathTitle = (
-        "BestBot's Path on Floor at Generation "
-        + botGen
-        + "\nFitness = "
-        + str(round(bestFits[-1]))
-        + " mm"
-    )
 elif recordType == "max":
     legTitle = (
         "MaxBot's Leg Motions at Generation "
@@ -193,17 +172,4 @@ elif recordType == "max":
         + str(round(maxFits[-1]))
         + " mm"
     )
-if recordType == "smooth":
-    lists = []
-    for lst in [bestFits, avgFits, bestFits]:
-        r_smooth_spline = robjects.r["smooth.spline"]
-        r_x = robjects.FloatVector(range(len(lst)))
-        r_y = robjects.FloatVector(lst)
-        kwargs = {"x": r_x, "y": r_y, "lambda": 1e-3}
-        spline = r_smooth_spline(**kwargs)
-        newLst = robjects.r["predict"](spline, r_x).rx2("y")
-        lists += [newLst]
-    bestFits = lists[0]
-    avgFits = lists[1]
-    refFits = lists[2]
 mkPlotFiles()

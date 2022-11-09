@@ -18,19 +18,19 @@ import           Util                           ( fromIntTup
                                                 )
 
 data Params = Params
-    { numNets :: Int
-    , numNrns :: Int
-    , i       :: Int
-    , mut     :: Float
-    , elitism :: Bool
-    , s       :: Int
+    { numNets  :: Int
+    , numNrns  :: Int
+    , numTests :: Int
+    , i        :: Int
+    , mut      :: Float
+    , elitism  :: Bool
+    , s        :: Int
     }
 
 instance Show Params where
     show pars =
-        let
-            segs =
-                map show [numNets pars, numNrns pars, i pars]
+        let segs =
+                map show [numNets pars, numNrns pars, numTests pars, i pars]
                     ++ [show $ mut pars]
                     ++ [show $ elitism pars]
                     ++ [show $ s pars]
@@ -38,12 +38,12 @@ instance Show Params where
 
 instance Read Params where
     readsPrec _ input =
-        let inputStrs                = split '_' input
-            [numNets, numNrns, iter] = map read (take 3 inputStrs)
-            mut                      = read (inputStrs !! 3)
-            elitism                  = read (inputStrs !! 4)
-            seed                     = read (last inputStrs)
-        in  [(Params numNets numNrns iter mut elitism seed, "")]
+        let inputStrs = split '_' input
+            [numNets, numNrns, numTests, iter] = map read (take 4 inputStrs)
+            mut       = read (inputStrs !! 4)
+            elitism   = read (inputStrs !! 5)
+            seed      = read (last inputStrs)
+        in  [(Params numNets numNrns numTests iter mut elitism seed, "")]
 
 data NetRecords = NetRecords
     { maxNs :: [Net]
@@ -87,7 +87,7 @@ getBestAgent agents fits = fst $ foldl agentMax (head agents, head fits) (zip ag
 evolveNetPop :: Params -> [Net] -> [Float] -> Rand StdGen [Net]
 evolveNetPop params nets fits
     | elitism params = do
-        let eliteNet = head [ nets !! n | n <- [0 .. length fits], fits !! n == maximum fits ]
+        let eliteNet = head [ nets !! n | n <- [0 .. length fits - 1], fits !! n == maximum fits ]
         newNets <- iterateR (getNextNetChild nets fits (mut params)) (numNets params - 1)
         return (eliteNet : newNets)
     | otherwise = iterateR (getNextNetChild nets fits (mut params)) (numNets params)

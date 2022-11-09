@@ -36,6 +36,7 @@ default-extensions:
 - FunctionalDependencies
 - MultiParamTypeClasses
 - StrictData
+- TupleSections
 
 library:
   source-dirs: src
