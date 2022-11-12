@@ -4,6 +4,8 @@ import           Bot                            ( Bot(..) )
 import           Control.Monad                  ( zipWithM )
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
+                                                , liftRand
+                                                , random
                                                 )
 import           Data.List                      ( transpose )
 import           Net                            ( Net
@@ -13,10 +15,10 @@ import           NetGA                          ( Params(..)
                                                 , evolveNetPop
                                                 , getBestAgent
                                                 )
-import           System.Random.Shuffle          ( shuffleM )
 import           Trainable                      ( Trainable(..) )
 import           Util                           ( iterateR
                                                 , mean
+                                                , remove
                                                 )
 
 data BotRecords = BotRecords
@@ -35,7 +37,7 @@ data BotRecords = BotRecords
 getInitBotRecords :: Params -> Rand StdGen BotRecords
 getInitBotRecords params = do
     legss                              <- iterateR (makeRandNets (numNrns params) (numNets params)) 6
-    (shuffledLegss, fitss, bots, fits) <- swarmTest (numTests params) (i params) ((map . map) (, []) legss) [] []
+    (shuffledLegss, fitss, bots, fits) <- swarmTest params legss
     let bestBot = getBestAgent bots fits
         bestFit = maximum fits
         maxBot  = bestBot
@@ -47,11 +49,7 @@ getInitBotRecords params = do
 runBotGA :: Params -> BotRecords -> Rand StdGen BotRecords
 runBotGA params records = do
     childLegss <- zipWithM (evolveNetPop params) (legss records) (fitss records)
-    (shuffledLegss, newFitss, newBots, newFits) <- swarmTest (numTests params)
-                                                             (i params)
-                                                             ((map . map) (, []) childLegss)
-                                                             []
-                                                             []
+    (shuffledLegss, newFitss, newBots, newFits) <- swarmTest params childLegss
     let newBestBot = getBestAgent newBots newFits
         newBestFit = maximum newFits
         newMaxBot  = getBestAgent [newBestBot, last (maxBs records)] [newBestFit, last (maxFs records)]
@@ -66,17 +64,40 @@ runBotGA params records = do
                                 newFitss
     return newRecords
 
-swarmTest :: Int -> Int -> [[(Net, [Float])]] -> [Bot] -> [Float] -> Rand StdGen ([[Net]], [[Float]], [Bot], [Float])
-swarmTest 0 _ legssWithFits bots fits = do
-    let getFinalFit (leg, fits) = (leg, mean fits)
-        avgFitLegss    = (map . map) getFinalFit legssWithFits
-        (legss, fitss) = unzip $ map unzip avgFitLegss
+swarmTest :: Params -> [[Net]] -> Rand StdGen ([[Net]], [[Float]], [Bot], [Float])
+swarmTest params legss = do
+    let legssWithFits = (map . map) (, []) legss
+        newBots       = (map Bot . transpose . (map . map) fst) legssWithFits
+        newFits       = map (test $ i params) newBots
+        fitss         = transpose $ map (replicate 6) newFits
+        addFitToLeg (leg, fs) f = (leg, f : fs)
+        newLegssWithFits = (zipWith . zipWith) addFitToLeg legssWithFits fitss
+    swarmTestR (numTests params - 1) (i params) newLegssWithFits newBots newFits
+
+swarmTestR :: Int -> Int -> [[(Net, [Float])]] -> [Bot] -> [Float] -> Rand StdGen ([[Net]], [[Float]], [Bot], [Float])
+swarmTestR 0 _ legssWithFits bots fits = do
+    let legss = (map . map) fst legssWithFits
+        getMaxFit (_, fs) = maximum fs
+        fitss = (map . map) getMaxFit legssWithFits
     return (legss, fitss, bots, fits)
-swarmTest numTests iter legssWithFits bots fits = do
-    shuffledLegss <- mapM shuffleM legssWithFits
-    let newBots = (map Bot . transpose . (map . map) fst) shuffledLegss
+swarmTestR numTests iter legssWithFits bots fits = do
+    orderedLegss <- mapM selectiveOrder legssWithFits
+    let newBots = (map Bot . transpose . (map . map) fst) orderedLegss
         newFits = map (test iter) newBots
         fitss   = transpose $ map (replicate 6) newFits
         addFitToLeg (leg, fs) f = (leg, f : fs)
-        newLegssWithFits = (zipWith . zipWith) addFitToLeg shuffledLegss fitss
-    swarmTest (numTests - 1) iter newLegssWithFits (bots ++ newBots) (fits ++ newFits)
+        newLegssWithFits = (zipWith . zipWith) addFitToLeg orderedLegss fitss
+    swarmTestR (numTests - 1) iter newLegssWithFits (bots ++ newBots) (fits ++ newFits)
+
+selectiveOrder :: [(Net, [Float])] -> Rand StdGen [(Net, [Float])]
+selectiveOrder []           = return []
+selectiveOrder legsWithFits = do
+    r <- liftRand random
+    let fits        = map (maximum . snd) legsWithFits
+        shiftedFits = map (subtract (minimum fits - 1)) fits
+        normedFits  = map (/ sum shiftedFits) shiftedFits
+        probsList   = [ sum $ take n normedFits | n <- [1 .. length normedFits - 1] ] ++ [1.0]
+        index       = minimum [ n | n <- [0 .. length probsList - 1], r <= probsList !! n ]
+        selectedLeg = legsWithFits !! index
+    rest <- selectiveOrder (remove index legsWithFits)
+    return (selectedLeg : rest)
