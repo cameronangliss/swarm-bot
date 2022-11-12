@@ -59,6 +59,7 @@ newBotMain = do
     params <- getParams Nothing
     putStr "\nInitializing generation 0..."
     let (records, g) = runRand (getInitBotRecords params) (mkStdGen $ s params)
+        !_           = last (BotGA.maxFs records)
     putStrLn "Success!"
     viewBot params records g
 
@@ -68,6 +69,7 @@ loadBotMain = do
     putStr "\nLoading save data..."
     recordStr <- readFile (".stack-work\\runs\\Bot_" ++ show params ++ ".txt")
     let (records, smgen) = read recordStr :: (BotRecords, SMGen)
+        !_               = last (BotGA.maxFs records)
         g                = StdGen smgen
     putStrLn "Success!"
     viewBot params records g
@@ -98,6 +100,7 @@ viewBot params records g = do
                 if input < length (bestFs records) - 1
                     then viewBot params records g
                     else do
+                        putStrLn ""
                         (newRecords, g2) <- computeBotRun params records g input
                         viewBot params newRecords g2
             | input == "change" = do
@@ -111,8 +114,9 @@ viewBot params records g = do
 
 computeBotRun :: Params -> BotRecords -> StdGen -> Int -> IO (BotRecords, StdGen)
 computeBotRun params records g genCap = do
-    putStr $ "\nComputing up to generation " ++ (show . length . bestFs) records ++ "..."
+    putStr $ "Computing up to generation " ++ (show . length . bestFs) records ++ "..."
     let (newRecords, g2) = runRand (runBotGA params records) g
+        !_               = last (BotGA.maxFs newRecords)
     putStrLn "Finished!"
     when (length (bestFs newRecords) `mod` 100 == 1) $ recordBotRun params newRecords g2 "default"
     if genCap < length (bestFs newRecords) then return (newRecords, g2) else computeBotRun params newRecords g2 genCap
@@ -131,7 +135,7 @@ recordBotRun params records g recordType = do
     if recordType == "default"
         then do
             writeFile (".stack-work\\runs\\Bot_" ++ show params ++ ".txt") (show (records, unStdGen g))
-            putStrLn "\nPlots drawn, save file overwritten."
+            putStrLn "Plots drawn, save file overwritten."
         else do
             putStrLn "\nPlots drawn."
 
@@ -160,6 +164,7 @@ newLegMain = do
     params <- getParams Nothing
     putStr "\nInitializing generation 0..."
     let (records, g) = runRand (startNetGA params) (mkStdGen $ NetGA.s params)
+        !_           = last (NetGA.maxFs records)
     putStrLn "Success!"
     viewLeg params records g
 
@@ -169,6 +174,7 @@ loadLegMain = do
     putStr "\nLoading save data..."
     recordStr <- readFile (".stack-work\\runs\\" ++ show params ++ ".txt")
     let (records, smgen) = read recordStr :: (NetRecords, SMGen)
+        !_               = last (NetGA.maxFs records)
         g                = StdGen smgen
     putStrLn "Success!"
     viewLeg params records g
@@ -211,6 +217,7 @@ loopLeg :: Params -> NetRecords -> StdGen -> IO ()
 loopLeg params records g = do
     putStr $ "\nComputing generation " ++ (show . length . NetGA.maxFs) records ++ "..."
     let (newRecords, g2) = runRand (runNetGA params records) g
+        !_               = last (NetGA.maxFs newRecords)
     putStrLn "Success!"
     recordLegRun params newRecords g2 False
     loopLeg params newRecords g2

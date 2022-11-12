@@ -41,6 +41,7 @@ library
   hs-source-dirs:
       src
   default-extensions:
+      BangPatterns
       FlexibleInstances
       FunctionalDependencies
       MultiParamTypeClasses
@@ -75,6 +76,7 @@ executable swarm-bot-exe
   hs-source-dirs:
       src
   default-extensions:
+      BangPatterns
       FlexibleInstances
       FunctionalDependencies
       MultiParamTypeClasses
@@ -102,6 +104,7 @@ test-suite swarm-bot-test
   hs-source-dirs:
       test
   default-extensions:
+      BangPatterns
       FlexibleInstances
       FunctionalDependencies
       MultiParamTypeClasses
