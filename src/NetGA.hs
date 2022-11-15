@@ -2,12 +2,16 @@ module NetGA where
 
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
+                                                , liftRand
+                                                , randomR
                                                 )
+import           Data.Foldable                  ( Foldable(foldl') )
 import           Net                            ( Net
                                                 , makeRandNets
                                                 )
 import           Trainable                      ( Trainable(..) )
-import           Util                           ( iterateR
+import           Util                           ( insert
+                                                , iterateR
                                                 , mean
                                                 , split
                                                 )
@@ -75,7 +79,7 @@ runNetGA params records = do
 
 -- gets agent with best fitness in a given population
 getBestAgent :: Ord b => [a] -> [b] -> a
-getBestAgent agents fits = fst $ foldl agentMax (head agents, head fits) (zip agents fits)
+getBestAgent agents fits = fst $ foldl' agentMax (head agents, head fits) (zip agents fits)
     where agentMax (agent1, fit1) (agent2, fit2) = if fit1 > fit2 then (agent1, fit1) else (agent2, fit2)
 
 -- generates an entire new population of legs reproductively from the old population
@@ -84,7 +88,8 @@ evolveNetPop params nets fits
     | elitism params = do
         let eliteNet = head [ nets !! n | n <- [0 .. length fits - 1], fits !! n == maximum fits ]
         newNets <- iterateR (getNextNetChild nets fits (mut params)) (numNets params - 1)
-        return (eliteNet : newNets)
+        r       <- liftRand $ randomR (0, numNets params - 1)
+        return $ insert r eliteNet newNets
     | otherwise = iterateR (getNextNetChild nets fits (mut params)) (numNets params)
 
 getNextNetChild :: [Net] -> [Float] -> Float -> Rand StdGen Net

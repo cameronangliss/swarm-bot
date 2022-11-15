@@ -21,14 +21,10 @@ description:         Please see the README on GitHub at <https://github.com/came
 
 dependencies:
 - base >= 4.7 && < 5
-- deepseq
 - MonadRandom
-- parallel
 - process
 - random
-- random-shuffle
 - splitmix
-- time
 
 default-extensions:
 - BangPatterns
@@ -62,5 +58,7 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -O2
+    - -Wextra
     dependencies:
     - swarm-bot

@@ -25,8 +25,8 @@ defaultPathData :: PathData
 defaultPathData = PathData 0 0 0 [(0, 0)]
 
 -- transforms the positional data from a bot's simulated run from horiz/vert data of every leg into incremental radial data of the overall robot's position in 2D space
-getBotPath :: Int -> Bot -> [(Float, Float)]
-getBotPath iter bot = getBotPathr fPosLsts defaultPathData where fPosLsts = (map . map) fromIntTup $ testBot iter bot
+getBotPath :: [[(Int, Int)]] -> [(Float, Float)]
+getBotPath legMoves = getBotPathr fPosLsts defaultPathData where fPosLsts = (map . map) fromIntTup legMoves
 
 getBotPathr :: [[(Float, Float)]] -> PathData -> [(Float, Float)]
 getBotPathr ([_] : _) pathData = path pathData
@@ -77,16 +77,16 @@ getDragFactor ys =
     in  dragFactor
 
 -- simulates a bot for a given number of iterations, and returns the positional data of every leg on the bot throughout the simulation
-testBot :: Int -> Bot -> [[(Int, Int)]]
-testBot iter bot = testBotr numNrns iter (getNets bot) (replicate 6 defaultTestData)
+getLegMoves :: Int -> Bot -> [[(Int, Int)]]
+getLegMoves iter bot = getLegMovesr numNrns iter (getNets bot) (replicate 6 defaultTestData)
     where numNrns = (length . getNrns . head . getNets) bot
 
-testBotr :: Int -> Int -> [Net] -> [TestData] -> [[(Int, Int)]]
-testBotr _ 0 _ testDataLst = map poss testDataLst
-testBotr numNrns iter nets testDataLst =
+getLegMovesr :: Int -> Int -> [Net] -> [TestData] -> [[(Int, Int)]]
+getLegMovesr _ 0 _ testDataLst = map poss testDataLst
+getLegMovesr numNrns iter nets testDataLst =
     let sLsts                     = [ [s1Lst !! n, s2Lst !! n, s3Lst !! n] | n <- [0 .. length testDataLst - 1] ]
         s3Lst                     = map s3 testDataLst
         s2Lst                     = map s2 testDataLst
         s1Lst                     = map s1 testDataLst
         (newNets, newTestDataLst) = unzip $ zipWith3 (testNetr sLsts numNrns True 1) [0 .. 5] nets testDataLst
-    in  testBotr numNrns (iter - 1) newNets newTestDataLst
+    in  getLegMovesr numNrns (iter - 1) newNets newTestDataLst

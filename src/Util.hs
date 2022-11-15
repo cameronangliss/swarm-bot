@@ -3,6 +3,8 @@ module Util where
 import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 )
+import           Data.Char                      ( digitToInt )
+import           Data.List                      ( foldl' )
 
 -- iterates through a given function, returning a list of all outcomes of the function throughout all the calls made to it
 iterateR :: Rand StdGen a -> Int -> Rand StdGen [a]
@@ -21,8 +23,11 @@ fromIntTup (x, y) = (fromIntegral x, fromIntegral y)
 numsInBtw :: (Int, Int) -> Int
 numsInBtw (x, y) = y - x + 1
 
-replace :: [a] -> Int -> a -> [a]
-replace lst n x = take n lst ++ [x] ++ drop (n + 1) lst
+insert :: Int -> a -> [a] -> [a]
+insert i x xs = take i xs ++ [x] ++ drop i xs
+
+replace :: Int -> a -> [a] -> [a]
+replace i x xs = take i xs ++ [x] ++ drop (i + 1) xs
 
 remove :: Int -> [a] -> [a]
 remove i xs = take i xs ++ drop (i + 1) xs
@@ -40,8 +45,7 @@ countRecordBreaks [_           ] = 1
 countRecordBreaks (x1 : x2 : xs) = (if x1 < x2 then 1 else 0) + countRecordBreaks (x2 : xs)
 
 bin2Dec :: String -> Int
-bin2Dec ""  = 0
-bin2Dec bin = read [last bin] + 2 * bin2Dec (init bin)
+bin2Dec = foldl' (\acc x -> acc * 2 + digitToInt x) 0
 
 dec2Bin :: Int -> String
 dec2Bin 0   = ""
@@ -59,14 +63,5 @@ dec2SignedBin num | num < 0   = '1' : dec2Bin (negate num)
 mean :: Fractional a => [a] -> a
 mean xs = sum xs / fromIntegral (length xs)
 
-formatTime :: String -> String
-formatTime timeStr =
-    let timeExact = read (init timeStr) :: Float
-        time      = floor timeExact
-        seconds   = fromIntegral (round (10 * timeExact) `mod` 100) / 10
-        minutes   = time `div` 60 `mod` 60
-    in  show minutes ++ "m " ++ show seconds ++ "s"
-
-toMaybe :: Bool -> a -> Maybe a
-toMaybe True  x = Just x
-toMaybe False _ = Nothing
+dotProd :: Num a => [a] -> [a] -> a
+dotProd as bs = foldl' (\acc (a, b) -> acc + a * b) 0 $ zip as bs

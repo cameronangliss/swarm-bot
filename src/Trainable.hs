@@ -1,9 +1,5 @@
 module Trainable where
 
-import           Bot                            ( Bot(Bot)
-                                                , getNets
-                                                )
-import           BotSim                         ( getBotPath )
 import           Chromable                      ( Chromable(..) )
 import           Control.Monad                  ( zipWithM )
 import           Control.Monad.Random           ( Rand
@@ -11,6 +7,7 @@ import           Control.Monad.Random           ( Rand
                                                 , liftRand
                                                 , random
                                                 )
+import           Data.List                      ( scanl' )
 import           Net                            ( Net )
 import           NetSim                         ( forwardMoveLeg
                                                 , testNet
@@ -31,8 +28,8 @@ instance Trainable Net [[String]] where
         r <- liftRand random
         let shiftedFits = map (subtract (minimum fits - 1)) fits
             normedFits  = map (/ sum shiftedFits) shiftedFits
-            probsList   = [ sum $ take n normedFits | n <- [1 .. length normedFits - 1] ] ++ [1.0]
-            index       = minimum [ n | n <- [0 .. length probsList - 1], r <= probsList !! n ]
+            probsList   = tail $ scanl' (+) 0 (init normedFits)
+            index       = length $ takeWhile (< r) probsList
             selectedLeg = nets !! index
             selectedFit = fits !! index
         (restLegs, restFits) <- select (numNets - 1) (remove index nets) (remove index fits)
@@ -58,19 +55,3 @@ instance Trainable Net [[String]] where
             let flippedBit = if bit == '0' then '1' else '0'
             if r < mutRate then return flippedBit else return bit
     test iter = forwardMoveLeg . map fromIntTup . testNet iter
-
-instance Trainable Bot [[[String]]] where
-    select 0       _    _    = return ([], [])
-    select numNets bots fits = do
-        r <- liftRand random
-        let shiftedFits = map (subtract (minimum fits - 1)) fits
-            normedFits  = map (/ sum shiftedFits) shiftedFits
-            probsList   = [ sum $ take n normedFits | n <- [1 .. length normedFits - 1] ] ++ [1.0]
-            index       = minimum [ n | n <- [0 .. length probsList - 1], r <= probsList !! n ]
-            selectedBot = bots !! index
-            selectedFit = fits !! index
-        (restBots, restFits) <- select (numNets - 1) (remove index bots) (remove index fits)
-        return (selectedBot : restBots, selectedFit : restFits)
-    cross bot1 bot2 = Bot <$> zipWithM cross (getNets bot1) (getNets bot2)
-    mutate mutRate bot = Bot <$> mapM (mutate mutRate) (getNets bot)
-    test iter = fst . last . getBotPath iter

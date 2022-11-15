@@ -7,7 +7,8 @@ import           Net                            ( Net(..)
 import           Nrn                            ( Nrn(..)
                                                 , setV
                                                 )
-import           Util                           ( remove
+import           Util                           ( dotProd
+                                                , remove
                                                 , replace
                                                 )
 
@@ -65,7 +66,7 @@ testNetr sLsts numNrns isFromBot iter netIndex net testData =
         newS2            = if newX == last xLst then 15 else 0
         newS3            = if newY == head yLst then 15 else 0
         newSLst          = [newS1, newS2, newS3]
-        newSLsts         = replace sLsts netIndex newSLst
+        newSLsts         = replace netIndex newSLst sLsts
         -- updating testData to move to next iteration of leg testing
         newTestData      = TestData newS1 newS2 newS3 newX newY newXMom newYMom (poss testData ++ [(newX, newY)])
     in  testNetr newSLsts numNrns isFromBot (iter - 1) netIndex newNet newTestData
@@ -81,15 +82,15 @@ getNrnAcc net netIndex sLsts isFromBot nrnIndex =
         ws                = getWs (getNrns net !! nrnIndex)
         iWs               = getIWs (getNrns net !! nrnIndex)
         -- inter-neuron accumulation
-        nrnAcc            = sum $ zipWith (*) vs ws
+        nrnAcc            = dotProd vs ws
         -- sensor accumulation for single-leg motion
         sLst              = head sLsts
-        outNrnSensAcc     = sum $ zipWith (*) sLst iWs
+        outNrnSensAcc     = dotProd sLst iWs
         legSensorAcc      = if nrnIndex `elem` [0, 1] then outNrnSensAcc else 0
         -- sensor accumulation for bot motion
-        homeLegSensAcc    = sum $ zipWith (*) (sLsts !! netIndex) iWs
+        homeLegSensAcc    = dotProd (sLsts !! netIndex) iWs
         otherLegsDownSens = map (!! 2) $ remove netIndex sLsts -- we only use the second sensor data (whether a leg is touching the ground or not) for the hidden neuron
-        otherLegsSensAcc  = sum $ zipWith (*) otherLegsDownSens iWs
+        otherLegsSensAcc  = dotProd otherLegsDownSens iWs
         botSensorAcc      = if nrnIndex `elem` [0, 1] then homeLegSensAcc else otherLegsSensAcc
         -- decides which sensor accumulation to use
         sensorAcc         = if isFromBot then botSensorAcc else legSensorAcc

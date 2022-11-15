@@ -6,7 +6,7 @@ import           BotGA                          ( BotRecords(..)
                                                 , runBotGA
                                                 )
 import           BotSim                         ( getBotPath
-                                                , testBot
+                                                , getLegMoves
                                                 )
 import           Control.Monad                  ( when )
 import           Control.Monad.Random           ( StdGen
@@ -150,9 +150,9 @@ getTruncRecords records numGens =
 
 writeDataFile :: Params -> BotRecords -> Bot -> IO ()
 writeDataFile params records bot = do
-    let legMoves         = testBot (i params) bot
+    let legMoves         = getLegMoves (i params) bot
         unzippedLegMoves = map (fromTup . unzip) legMoves
-        botPath          = getBotPath (i params) bot
+        botPath          = getBotPath legMoves
         unzippedBotPath  = fromTup (unzip botPath)
         fitsTxt          = (unlines . map show) [BotGA.maxFs records, bestFs records, BotGA.avgFs records]
     writeFile ".stack-work\\datafile.txt" $ fitsTxt ++ show unzippedLegMoves ++ "\n" ++ show unzippedBotPath
