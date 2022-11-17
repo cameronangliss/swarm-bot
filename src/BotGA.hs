@@ -68,34 +68,39 @@ runBotGA params records = do
 
 swarmTest :: Params -> [[Net]] -> Rand StdGen ([[Net]], [[Float]], [Bot], [Float])
 swarmTest params legss = do
-    let legssWithFits = (map . map) (, []) legss
+    let legssWithFits = (map . map) (, [], []) legss
         bots          = map Bot (transpose legss)
         (fits, fitss) = unzip $ map (getFitAndLegsFits $ i params) bots
-        addFitToLeg (leg, fs) f = (leg, f : fs)
-        newLegssWithFits = (zipWith . zipWith) addFitToLeg legssWithFits (transpose fitss)
+        addFitToLeg (leg, fInds, fCoOps) fInd fCoOp = (leg, fInd : fInds, fCoOp : fCoOps)
+        newLegssWithFits =
+            (zipWith3 . zipWith3) addFitToLeg legssWithFits (transpose fitss) (transpose $ map (replicate 6) fits)
     swarmTestR (numTests params - 1) (i params) newLegssWithFits bots fits
 
-swarmTestR :: Int -> Int -> [[(Net, [Float])]] -> [Bot] -> [Float] -> Rand StdGen ([[Net]], [[Float]], [Bot], [Float])
+swarmTestR
+    :: Int -> Int -> [[(Net, [Float], [Float])]] -> [Bot] -> [Float] -> Rand StdGen ([[Net]], [[Float]], [Bot], [Float])
 swarmTestR 0 _ legssWithFits bots fits = do
-    let legss = (map . map) fst legssWithFits
-        getFinalFit (_, fs) = mean fs
+    let legss = (map . map) (\(x, _, _) -> x) legssWithFits
+        getFinalFit (_, _, fs) = mean fs
         fitss = (map . map) getFinalFit legssWithFits
     return (legss, fitss, bots, fits)
 swarmTestR numTests iter legssWithFits bots fits = do
     orderedLegss <- mapM selectiveOrder legssWithFits
-    let newBots             = (map Bot . transpose . (map . map) fst) orderedLegss
+    let newBots             = (map Bot . transpose . (map . map) (\(x, _, _) -> x)) orderedLegss
         (newFits, newFitss) = unzip $ map (getFitAndLegsFits iter) newBots
-        addFitToLeg (leg, fs) f = (leg, f : fs)
-        newLegssWithFits = (zipWith . zipWith) addFitToLeg orderedLegss (transpose newFitss)
+        addFitToLeg (leg, fInds, fCoOps) fInd fCoOp = (leg, fInd : fInds, fCoOp : fCoOps)
+        newLegssWithFits = (zipWith3 . zipWith3) addFitToLeg
+                                                 orderedLegss
+                                                 (transpose newFitss)
+                                                 (transpose $ map (replicate 6) newFits)
     swarmTestR (numTests - 1) iter newLegssWithFits (bots ++ newBots) (fits ++ newFits)
 
-selectiveOrder :: [(Net, [Float])] -> Rand StdGen [(Net, [Float])]
+selectiveOrder :: [(Net, [Float], [Float])] -> Rand StdGen [(Net, [Float], [Float])]
 selectiveOrder []           = return []
 selectiveOrder legsWithFits = do
-    let legs = map fst legsWithFits
-        fits = map (mean . snd) legsWithFits
+    let legs = map (\(x, _, _) -> x) legsWithFits
+        fits = map (mean . (\(_, fInds, fCoOps) -> zipWith (+) fInds fCoOps)) legsWithFits
     (ordLegs, _) <- select (length legsWithFits) legs fits
-    let getLegWithFits leg = head $ filter (\legWithFits -> fst legWithFits == leg) legsWithFits
+    let getLegWithFits leg = head $ filter (\legWithFits -> (\(x, _, _) -> x) legWithFits == leg) legsWithFits
     return $ map getLegWithFits ordLegs
 
 getFitAndLegsFits :: Int -> Bot -> (Float, [Float])
@@ -103,4 +108,4 @@ getFitAndLegsFits iter bot =
     let legMoves = getLegMoves iter bot
         legFits  = map (forwardMoveLeg . map fromIntTup) legMoves
         botFit   = (fst . last . getBotPath) legMoves
-    in  (botFit, map (+ botFit) legFits)
+    in  (botFit, legFits)
