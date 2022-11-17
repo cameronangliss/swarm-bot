@@ -103,4 +103,4 @@ getFitAndLegsFits iter bot =
     let legMoves = getLegMoves iter bot
         legFits  = map (forwardMoveLeg . map fromIntTup) legMoves
         botFit   = (fst . last . getBotPath) legMoves
-    in  (botFit, map (+ botFit) legFits)
+    in  (botFit, map (max botFit) legFits)
