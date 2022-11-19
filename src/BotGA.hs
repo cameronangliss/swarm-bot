@@ -9,17 +9,16 @@ import           Control.Monad.Random           ( Rand
                                                 , StdGen
                                                 )
 import           Data.List                      ( transpose )
-import           Net                            ( Net
-                                                , makeRandNets
-                                                )
-import           NetGA                          ( Params(..)
+import           Net                            ( Net )
+import           NetGA                          ( NetRecords(ns)
+                                                , Params(..)
                                                 , evolveNetPop
                                                 , getBestAgent
+                                                , runNetGA
+                                                , startNetGA
                                                 )
-import           NetSim                         ( forwardMoveLeg )
 import           Trainable                      ( Trainable(select) )
-import           Util                           ( fromIntTup
-                                                , iterateR
+import           Util                           ( iterateR
                                                 , mean
                                                 )
 
@@ -38,7 +37,7 @@ data BotRecords = BotRecords
 -- consists of 6 parallel genetic algorithms for each leg of the bot
 getInitBotRecords :: Params -> Rand StdGen BotRecords
 getInitBotRecords params = do
-    legss                              <- iterateR (makeRandNets (numNrns params) (numNets params)) 6
+    legss                              <- map ns <$> iterateR (startNetGA params >>= runNetGA params) 6
     (shuffledLegss, fitss, bots, fits) <- swarmTest params legss
     let bestBot = getBestAgent bots fits
         bestFit = maximum fits
@@ -70,9 +69,9 @@ swarmTest :: Params -> [[Net]] -> Rand StdGen ([[Net]], [[Float]], [Bot], [Float
 swarmTest params legss = do
     let legssWithFits = (map . map) (, []) legss
         bots          = map Bot (transpose legss)
-        (fits, fitss) = unzip $ map (getFitAndLegsFits $ i params) bots
+        fits          = map (getBotFit $ i params) bots
         addFitToLeg (leg, fs) f = (leg, f : fs)
-        newLegssWithFits = (zipWith . zipWith) addFitToLeg legssWithFits (transpose fitss)
+        newLegssWithFits = (zipWith . zipWith) addFitToLeg legssWithFits (transpose $ map (replicate 6) fits)
     swarmTestR (numTests params - 1) (i params) newLegssWithFits bots fits
 
 swarmTestR :: Int -> Int -> [[(Net, [Float])]] -> [Bot] -> [Float] -> Rand StdGen ([[Net]], [[Float]], [Bot], [Float])
@@ -83,10 +82,10 @@ swarmTestR 0 _ legssWithFits bots fits = do
     return (legss, fitss, bots, fits)
 swarmTestR numTests iter legssWithFits bots fits = do
     orderedLegss <- mapM selectiveOrder legssWithFits
-    let newBots             = (map Bot . transpose . (map . map) fst) orderedLegss
-        (newFits, newFitss) = unzip $ map (getFitAndLegsFits iter) newBots
+    let newBots = (map Bot . transpose . (map . map) fst) orderedLegss
+        newFits = map (getBotFit iter) newBots
         addFitToLeg (leg, fs) f = (leg, f : fs)
-        newLegssWithFits = (zipWith . zipWith) addFitToLeg orderedLegss (transpose newFitss)
+        newLegssWithFits = (zipWith . zipWith) addFitToLeg orderedLegss (transpose $ map (replicate 6) newFits)
     swarmTestR (numTests - 1) iter newLegssWithFits (bots ++ newBots) (fits ++ newFits)
 
 selectiveOrder :: [(Net, [Float])] -> Rand StdGen [(Net, [Float])]
@@ -98,9 +97,5 @@ selectiveOrder legsWithFits = do
     let getLegWithFits leg = head $ filter (\legWithFits -> fst legWithFits == leg) legsWithFits
     return $ map getLegWithFits ordLegs
 
-getFitAndLegsFits :: Int -> Bot -> (Float, [Float])
-getFitAndLegsFits iter bot =
-    let legMoves = getLegMoves iter bot
-        legFits  = map (forwardMoveLeg . map fromIntTup) legMoves
-        botFit   = (fst . last . getBotPath) legMoves
-    in  (botFit, map (+ botFit) legFits)
+getBotFit :: Int -> Bot -> Float
+getBotFit iter = fst . last . getBotPath . getLegMoves iter

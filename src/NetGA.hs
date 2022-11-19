@@ -19,6 +19,7 @@ import           Util                           ( insert
 data Params = Params
     { numNets  :: Int
     , numNrns  :: Int
+    , initGens :: Int
     , numTests :: Int
     , i        :: Int
     , mut      :: Float
@@ -29,7 +30,7 @@ data Params = Params
 instance Show Params where
     show pars =
         let segs =
-                map show [numNets pars, numNrns pars, numTests pars, i pars]
+                map show [numNets pars, numNrns pars, initGens pars, numTests pars, i pars]
                     ++ [show $ mut pars]
                     ++ [show $ elitism pars]
                     ++ [show $ s pars]
@@ -38,11 +39,11 @@ instance Show Params where
 instance Read Params where
     readsPrec _ input =
         let inputStrs = split '_' input
-            [numNets, numNrns, numTests, iter] = map read (take 4 inputStrs)
-            mut       = read (inputStrs !! 4)
-            elitism   = read (inputStrs !! 5)
+            [numNets, numNrns, initGens, numTests, iter] = map read (take 5 inputStrs)
+            mut       = read (inputStrs !! 5)
+            elitism   = read (inputStrs !! 6)
             seed      = read (last inputStrs)
-        in  [(Params numNets numNrns numTests iter mut elitism seed, "")]
+        in  [(Params numNets numNrns initGens numTests iter mut elitism seed, "")]
 
 data NetRecords = NetRecords
     { maxNs :: [Net]
@@ -69,13 +70,14 @@ runNetGA params records = do
     newNets <- evolveNetPop params (ns records) (fs records)
     let newFits    = map (test $ i params) newNets
         maxNet     = getBestAgent newNets newFits
-        updMaxNets = maxNs records ++ [maxNet]
         maxFit     = maximum newFits
-        updMaxFits = maxFs records ++ [maxFit]
         avgFit     = mean newFits
-        updAvgFits = avgFs records ++ [avgFit]
-        newRecords = NetRecords updMaxNets updMaxFits updAvgFits newNets newFits
-    if length updMaxFits `mod` 100 == 1 then return newRecords else runNetGA params newRecords
+        newRecords = NetRecords (maxNs records ++ [maxNet])
+                                (maxFs records ++ [maxFit])
+                                (avgFs records ++ [avgFit])
+                                newNets
+                                newFits
+    if length (maxFs newRecords) > initGens params then return newRecords else runNetGA params newRecords
 
 -- gets agent with best fitness in a given population
 getBestAgent :: Ord b => [a] -> [b] -> a

@@ -253,6 +253,7 @@ getParams currSeed = do
     putStrLn "\nEnter parameters:"
     numNets  <- getIntLine "numNets = "
     numNrns  <- getIntLine "numNrns = "
+    initGens <- getIntLine "initGens = "
     numTests <- getIntLine "numTests = "
     iter     <- getIntLine "iter = "
     mut      <- getFloatLine "mut = "
@@ -260,7 +261,7 @@ getParams currSeed = do
     elitismInput <- getLine
     let elitism = elitismInput == "y"
     seed <- maybe (getIntLine "Initial RNG seed = ") return currSeed
-    let params = Params numNets numNrns numTests iter mut elitism seed
+    let params = Params numNets numNrns initGens numTests iter mut elitism seed
     putStr "Are these values all correct? (y/n): "
     input <- getLine
     let action
