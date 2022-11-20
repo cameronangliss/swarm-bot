@@ -20,7 +20,6 @@ data Params = Params
     { numNets  :: Int
     , numNrns  :: Int
     , initGens :: Int
-    , numTests :: Int
     , i        :: Int
     , mut      :: Float
     , elitism  :: Bool
@@ -30,7 +29,7 @@ data Params = Params
 instance Show Params where
     show pars =
         let segs =
-                map show [numNets pars, numNrns pars, initGens pars, numTests pars, i pars]
+                map show [numNets pars, numNrns pars, initGens pars, i pars]
                     ++ [show $ mut pars]
                     ++ [show $ elitism pars]
                     ++ [show $ s pars]
@@ -39,11 +38,11 @@ instance Show Params where
 instance Read Params where
     readsPrec _ input =
         let inputStrs = split '_' input
-            [numNets, numNrns, initGens, numTests, iter] = map read (take 5 inputStrs)
-            mut       = read (inputStrs !! 5)
-            elitism   = read (inputStrs !! 6)
+            [numNets, numNrns, initGens, iter] = map read (take 4 inputStrs)
+            mut       = read (inputStrs !! 4)
+            elitism   = read (inputStrs !! 5)
             seed      = read (last inputStrs)
-        in  [(Params numNets numNrns initGens numTests iter mut elitism seed, "")]
+        in  [(Params numNets numNrns initGens iter mut elitism seed, "")]
 
 data NetRecords = NetRecords
     { maxNs :: [Net]
