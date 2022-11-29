@@ -36,7 +36,8 @@ data BotRecords = BotRecords
 -- consists of 6 parallel genetic algorithms for each leg of the bot
 getInitBotRecords :: Params -> Rand StdGen BotRecords
 getInitBotRecords params = do
-    legss <- map ns <$> iterateR (startNetGA params >>= runNetGA params) 6
+    let legParams = params { elitism = True }
+    legss <- map ns <$> iterateR (startNetGA legParams >>= runNetGA legParams) 6
     let bots    = map Bot (transpose legss)
         fits    = map (getBotFit $ i params) bots
         fitss   = transpose $ map (replicate 6) fits
