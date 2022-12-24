@@ -84,9 +84,9 @@ getLegMoves iter bot = getLegMovesr numNrns iter (getNets bot) (replicate 6 defa
 getLegMovesr :: Int -> Int -> [Net] -> [TestData] -> [[(Int, Int)]]
 getLegMovesr _ 0 _ testDataLst = map poss testDataLst
 getLegMovesr numNrns iter nets testDataLst =
-    let sLsts                     = [ [s1Lst !! n, s2Lst !! n, s3Lst !! n] | n <- [0 .. length testDataLst - 1] ]
-        s3Lst                     = map s3 testDataLst
+    let s1Lst                     = map s1 testDataLst
         s2Lst                     = map s2 testDataLst
-        s1Lst                     = map s1 testDataLst
+        s3Lst                     = map s3 testDataLst
+        sLsts                     = [ [s1Lst !! n, s2Lst !! n, s3Lst !! n] | n <- [0 .. length testDataLst - 1] ]
         (newNets, newTestDataLst) = unzip $ zipWith3 (testNetr sLsts numNrns True 1) [0 .. 5] nets testDataLst
     in  getLegMovesr numNrns (iter - 1) newNets newTestDataLst
