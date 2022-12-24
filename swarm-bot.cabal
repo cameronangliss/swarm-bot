@@ -41,19 +41,15 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      BangPatterns
-      FlexibleInstances
       FunctionalDependencies
-      MultiParamTypeClasses
       StrictData
-      TupleSections
   build-depends:
       MonadRandom
     , base >=4.7 && <5
     , process
     , random
     , splitmix
-  default-language: Haskell2010
+  default-language: GHC2021
 
 executable swarm-bot-exe
   main-is: Main.hs
@@ -72,12 +68,8 @@ executable swarm-bot-exe
   hs-source-dirs:
       src
   default-extensions:
-      BangPatterns
-      FlexibleInstances
       FunctionalDependencies
-      MultiParamTypeClasses
       StrictData
-      TupleSections
   ghc-options: -threaded -rtsopts "-with-rtsopts=-N -s" -O2 -Wextra
   build-depends:
       MonadRandom
@@ -86,7 +78,7 @@ executable swarm-bot-exe
     , random
     , splitmix
     , swarm-bot
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite swarm-bot-test
   type: exitcode-stdio-1.0
@@ -96,12 +88,8 @@ test-suite swarm-bot-test
   hs-source-dirs:
       test
   default-extensions:
-      BangPatterns
-      FlexibleInstances
       FunctionalDependencies
-      MultiParamTypeClasses
       StrictData
-      TupleSections
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2 -Wextra
   build-depends:
       MonadRandom
@@ -110,4 +98,4 @@ test-suite swarm-bot-test
     , random
     , splitmix
     , swarm-bot
-  default-language: Haskell2010
+  default-language: GHC2021
