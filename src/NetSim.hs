@@ -8,7 +8,7 @@ import           Nrn                            ( Nrn(..)
                                                 , setV
                                                 )
 import           Util                           ( dotProd
-                                                , remove
+                                                , insert
                                                 , replace
                                                 )
 
@@ -78,22 +78,22 @@ getNetAccs net netIndex sLsts numNrns isFromBot = map (getNrnAcc net netIndex sL
 -- calculates the new accumulation of the given neuron during an iteration
 getNrnAcc :: Net -> Int -> [[Int]] -> Bool -> Int -> Int
 getNrnAcc net netIndex sLsts isFromBot nrnIndex =
-    let vs                = (map getV . getNrns) net
-        ws                = getWs (getNrns net !! nrnIndex)
-        iWs               = getIWs (getNrns net !! nrnIndex)
+    let vs            = (map getV . getNrns) net
+        ws            = getWs (getNrns net !! nrnIndex)
+        iWs           = getIWs (getNrns net !! nrnIndex)
+        iWs'          = insert netIndex 0 iWs
         -- inter-neuron accumulation
-        nrnAcc            = dotProd vs ws
+        nrnAcc        = dotProd vs ws
         -- sensor accumulation for single-leg motion
-        sLst              = head sLsts
-        outNrnSensAcc     = dotProd sLst iWs
-        legSensorAcc      = if nrnIndex `elem` [0, 1] then outNrnSensAcc else 0
+        sLst          = head sLsts
+        sensAcc       = dotProd sLst iWs
+        legSensorAcc  = if nrnIndex `elem` [0, 1] then sensAcc else 0
         -- sensor accumulation for bot motion
-        homeLegSensAcc    = dotProd (sLsts !! netIndex) iWs
-        otherLegsDownSens = map (!! 2) $ remove netIndex sLsts -- we only use the second sensor data (whether a leg is touching the ground or not) for the hidden neuron
-        otherLegsSensAcc  = dotProd otherLegsDownSens iWs
-        botSensorAcc      = if nrnIndex `elem` [0, 1] then homeLegSensAcc else otherLegsSensAcc
+        outNrnSensAcc = dotProd (sLsts !! netIndex) iWs
+        hidNrnSensAcc = dotProd (map (!! 2) sLsts) iWs'
+        botSensorAcc  = if nrnIndex `elem` [0, 1] then outNrnSensAcc else hidNrnSensAcc
         -- decides which sensor accumulation to use
-        sensorAcc         = if isFromBot then botSensorAcc else legSensorAcc
+        sensorAcc     = if isFromBot then botSensorAcc else legSensorAcc
     in  nrnAcc + sensorAcc
 
 -- calculates the output of a neuron based on its current accumulation and its threshold values
