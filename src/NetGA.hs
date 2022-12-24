@@ -5,7 +5,7 @@ import           Control.Monad.Random           ( Rand
                                                 , liftRand
                                                 , randomR
                                                 )
-import           Data.Foldable                  ( Foldable(foldl') )
+import           Data.List                      ( foldl' )
 import           Net                            ( Net
                                                 , makeRandNets
                                                 )

@@ -27,7 +27,8 @@ instance Trainable Net [[String]] where
     select numNets nets fits = do
         r <- liftRand random
         let shiftedFits = map (subtract (minimum fits - 1)) fits
-            normedFits  = map (/ sum shiftedFits) shiftedFits
+            totalFits   = sum shiftedFits
+            normedFits  = map (/ totalFits) shiftedFits
             probsList   = tail $ scanl' (+) 0 (init normedFits)
             index       = length $ takeWhile (< r) probsList
             selectedLeg = nets !! index

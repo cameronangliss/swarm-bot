@@ -8,7 +8,9 @@ import           NetSim                         ( TestData(poss, s1, s2, s3)
                                                 , defaultTestData
                                                 , testNetr
                                                 )
-import           Util                           ( fromIntTup )
+import           Util                           ( dotProd
+                                                , fromIntTup
+                                                )
 
 data PathData = PathData
     { x    :: Float
@@ -55,8 +57,8 @@ getLegEffects vLegs2Bot verts =
         denom1      = sum rightCoeffs
         coeffs0     = map (\a -> if denom0 == 0 then 0 else a / denom0) leftCoeffs
         coeffs1     = map (\a -> if denom1 == 0 then 0 else a / denom1) rightCoeffs
-        thrust0     = sum $ zipWith (*) vLegsLeft coeffs0
-        thrust1     = sum $ zipWith (*) vLegsRight coeffs1
+        thrust0     = dotProd vLegsLeft coeffs0
+        thrust1     = dotProd vLegsRight coeffs1
         thrust      = (thrust0 + thrust1) / 2
         degTurn     = (thrust1 - thrust0) / botWidth
     in  (thrust, degTurn)
