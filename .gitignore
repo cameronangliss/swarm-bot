@@ -1,4 +1,5 @@
 .stack-work/
+.vscode/
 pysrc/
 src/Main.exe
 *.prof
