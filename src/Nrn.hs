@@ -1,17 +1,8 @@
 module Nrn where
 
-import           Control.Monad.Random           ( Rand
-                                                , StdGen
-                                                , liftRand
-                                                , randomR
-                                                )
-import           Util                           ( bin2Dec
-                                                , dec2Bin
-                                                , dec2SignedBin
-                                                , iterateR
-                                                , numsInBtw
-                                                , signedBin2Dec
-                                                )
+import           Control.Monad.Random (Rand, StdGen, liftRand, randomR)
+import           Util                 (bin2Dec, dec2Bin, dec2SignedBin,
+                                       iterateR, numsInBtw, signedBin2Dec)
 
 data Nrn = Nrn
     { getV   :: Int

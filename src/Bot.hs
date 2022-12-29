@@ -1,12 +1,8 @@
 module Bot where
 
-import           Control.Monad.Random           ( Rand
-                                                , StdGen
-                                                )
-import           Net                            ( Net
-                                                , makeRandNets
-                                                )
-import           Util                           ( iterateR )
+import           Control.Monad.Random (Rand, StdGen)
+import           Net                  (Net, makeRandNets)
+import           Util                 (iterateR)
 
 newtype Bot = Bot {getNets :: [Net]} deriving (Eq, Show, Read)
 

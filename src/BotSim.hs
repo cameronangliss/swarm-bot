@@ -1,16 +1,9 @@
 module BotSim where
 
-import           Bot                            ( Bot(..) )
-import           Net                            ( Net
-                                                , getNrns
-                                                )
-import           NetSim                         ( TestData(poss, s1, s2, s3)
-                                                , defaultTestData
-                                                , testNetr
-                                                )
-import           Util                           ( dotProd
-                                                , fromIntTup
-                                                )
+import           Bot    (Bot (..))
+import           Net    (Net, getNrns)
+import           NetSim (TestData (poss, s1, s2, s3), defaultTestData, testNetr)
+import           Util   (dotProd, fromIntTup)
 
 data PathData = PathData
     { x    :: Float

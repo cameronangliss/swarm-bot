@@ -1,20 +1,12 @@
 module Trainable where
 
-import           Chromable                      ( Chromable(..) )
-import           Control.Monad                  ( zipWithM )
-import           Control.Monad.Random           ( Rand
-                                                , StdGen
-                                                , liftRand
-                                                , random
-                                                )
-import           Data.List                      ( scanl' )
-import           Net                            ( Net )
-import           NetSim                         ( forwardMoveLeg
-                                                , testNet
-                                                )
-import           Util                           ( fromIntTup
-                                                , remove
-                                                )
+import           Chromable            (Chromable (..))
+import           Control.Monad        (zipWithM)
+import           Control.Monad.Random (Rand, StdGen, liftRand, random)
+import           Data.List            (scanl')
+import           Net                  (Net)
+import           NetSim               (forwardMoveLeg, testNet)
+import           Util                 (fromIntTup, remove)
 
 class Chromable a c => Trainable a c where
     select :: Int -> [a] -> [Float] -> Rand StdGen ([a], [Float])

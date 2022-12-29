@@ -1,12 +1,8 @@
 module Net where
 
-import           Control.Monad.Random           ( Rand
-                                                , StdGen
-                                                )
-import           Nrn                            ( Nrn
-                                                , makeRandNrns
-                                                )
-import           Util                           ( iterateR )
+import           Control.Monad.Random (Rand, StdGen)
+import           Nrn                  (Nrn, makeRandNrns)
+import           Util                 (iterateR)
 
 data Net = Net
     { getOutNrn1 :: Nrn

@@ -1,18 +1,9 @@
 module Chromable where
 
-import           Bot                            ( Bot(Bot)
-                                                , getNets
-                                                )
-import           Net                            ( Net
-                                                , getNrns
-                                                , makeNet
-                                                )
-import           Nrn                            ( Nrn(Nrn)
-                                                , fromBin
-                                                , getNumBits
-                                                , toBin
-                                                )
-import           Util                           ( chunksOf )
+import           Bot  (Bot (Bot), getNets)
+import           Net  (Net, getNrns, makeNet)
+import           Nrn  (Nrn (Nrn), fromBin, getNumBits, toBin)
+import           Util (chunksOf)
 
 class Chromable a c | a -> c where
     toChrom :: a -> c

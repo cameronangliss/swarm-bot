@@ -1,34 +1,20 @@
 module Main where
 
-import           Bot                            ( Bot(..) )
-import           BotGA                          ( BotRecords(..)
-                                                , getInitBotRecords
-                                                , runBotGA
-                                                )
-import           BotSim                         ( getBotPath
-                                                , getLegMoves
-                                                )
-import           Control.Monad                  ( when )
-import           Control.Monad.Random           ( StdGen
-                                                , mkStdGen
-                                                , runRand
-                                                )
-import           NetGA                          ( NetRecords(..)
-                                                , Params(..)
-                                                , runNetGA
-                                                , startNetGA
-                                                )
-import           NetSim                         ( testNet )
-import           System.IO                      ( BufferMode(NoBuffering)
-                                                , hSetBuffering
-                                                , stdout
-                                                )
-import           System.Process                 ( callCommand )
-import           System.Random.Internal         ( StdGen(..) )
-import           System.Random.SplitMix         ( SMGen )
-import           Util                           ( countRecordBreaks
-                                                , fromTup
-                                                )
+import           Bot                    (Bot (..))
+import           BotGA                  (BotRecords (..), getInitBotRecords,
+                                         runBotGA)
+import           BotSim                 (getBotPath, getLegMoves)
+import           Control.Monad          (when)
+import           Control.Monad.Random   (StdGen, mkStdGen, runRand)
+import           NetGA                  (NetRecords (..), Params (..), runNetGA,
+                                         startNetGA)
+import           NetSim                 (testNet)
+import           System.IO              (BufferMode (NoBuffering),
+                                         hSetBuffering, stdout)
+import           System.Process         (callCommand)
+import           System.Random.Internal (StdGen (..))
+import           System.Random.SplitMix (SMGen)
+import           Util                   (countRecordBreaks, fromTup)
 
 main :: IO ()
 main = do

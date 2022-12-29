@@ -1,16 +1,8 @@
 module NetSim where
 
-import           Net                            ( Net(..)
-                                                , getNrns
-                                                , makeNet
-                                                )
-import           Nrn                            ( Nrn(..)
-                                                , setV
-                                                )
-import           Util                           ( dotProd
-                                                , insert
-                                                , replace
-                                                )
+import           Net  (Net (..), getNrns, makeNet)
+import           Nrn  (Nrn (..), setV)
+import           Util (dotProd, insert, replace)
 
 data TestData = TestData
     { s1   :: Int

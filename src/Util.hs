@@ -1,10 +1,8 @@
 module Util where
 
-import           Control.Monad.Random           ( Rand
-                                                , StdGen
-                                                )
-import           Data.Char                      ( digitToInt )
-import           Data.List                      ( foldl' )
+import           Control.Monad.Random (Rand, StdGen)
+import           Data.Char            (digitToInt)
+import           Data.List            (foldl')
 
 -- iterates through a given function, returning a list of all outcomes of the function throughout all the calls made to it
 iterateR :: Rand StdGen a -> Int -> Rand StdGen [a]
