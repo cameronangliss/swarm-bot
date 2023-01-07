@@ -1,5 +1,6 @@
 .stack-work/
 .vscode/
 pysrc/
+rust-test/
 src/Main.exe
 *.prof
