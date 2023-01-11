@@ -1,6 +1,6 @@
-.stack-work/
-.vscode/
-pysrc/
-rust-test/
-src/Main.exe
-*.prof
+/.vscode
+plots/*
+runs/*
+/target
+Cargo.lock
+datafile.txt
