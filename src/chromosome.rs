@@ -12,7 +12,7 @@ pub trait Chromable<T> {
 /// Leg Chromosome
 
 #[derive(Debug)]
-pub struct LegChrom(Vec<NeuronChrom>);
+pub struct LegChrom(pub Vec<NeuronChrom>);
 
 impl Chromable<LegChrom> for LegChrom {
     fn cross(&self, chrom: &LegChrom) -> LegChrom {
@@ -64,7 +64,13 @@ impl From<&Leg> for LegChrom {
 /// Neuron Chromosome
 
 #[derive(Debug)]
-pub struct NeuronChrom(String, String, String, Vec<String>, Vec<String>);
+pub struct NeuronChrom(
+    pub String,
+    pub String,
+    pub String,
+    pub Vec<String>,
+    pub Vec<String>,
+);
 
 impl Chromable<NeuronChrom> for NeuronChrom {
     fn cross(&self, chrom: &NeuronChrom) -> NeuronChrom {

@@ -83,7 +83,7 @@ pub struct BotRecords {
     best_bot: Bot,
     pub best_fits: Vec<f32>,
     pub avg_fits: Vec<f32>,
-    leg_lists: Vec<Vec<Leg>>,
+    pub leg_lists: Vec<Vec<Leg>>,
     fit_lists: Vec<Vec<f32>>,
 }
 

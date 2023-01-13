@@ -3,7 +3,7 @@ const YS: [i16; 16] = [0, 0, 3, 8, 14, 21, 28, 34, 39, 43, 45, 48, 49, 49, 49, 4
 
 #[derive(Clone)]
 pub struct LegEnv {
-    pub sens_values: Vec<i16>,
+    pub sens_values: [i16; 3],
     pub x_pos: i16,
     pub y_pos: i16,
     x_mom: i16,
@@ -13,7 +13,7 @@ pub struct LegEnv {
 impl Default for LegEnv {
     fn default() -> LegEnv {
         LegEnv {
-            sens_values: vec![15, 0, 15],
+            sens_values: [15, 0, 15],
             x_pos: 0,
             y_pos: 0,
             x_mom: 0,
@@ -31,7 +31,7 @@ impl LegEnv {
         let sens_value1 = if x_pos == XS[0] { 15 } else { 0 };
         let sens_value2 = if x_pos == XS[15] { 15 } else { 0 };
         let sens_value3 = if y_pos == YS[0] { 15 } else { 0 };
-        let sens_values = vec![sens_value1, sens_value2, sens_value3];
+        let sens_values = [sens_value1, sens_value2, sens_value3];
         LegEnv {
             sens_values,
             x_pos,

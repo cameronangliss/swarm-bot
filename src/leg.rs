@@ -3,7 +3,7 @@ use itertools::iterate;
 use crate::leg_env::LegEnv;
 use crate::neuron::{make_rand_neuron, Neuron};
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Leg(pub Vec<Neuron>);
 
 pub fn make_rand_leg(num_neurons: usize) -> Leg {
@@ -27,7 +27,7 @@ impl Leg {
         distance
     }
 
-    fn test(&self, iters: usize) -> Vec<(i16, i16)> {
+    pub fn test(&self, iters: usize) -> Vec<(i16, i16)> {
         let init_env = LegEnv::default();
         iterate((self.clone(), init_env), |(leg, env)| leg.step(env))
             .take(iters + 1)
@@ -43,13 +43,13 @@ impl Leg {
         (upd_leg, upd_env)
     }
 
-    fn accumulate_for_leg(&self, sens_values: &Vec<i16>) -> Vec<i16> {
+    fn accumulate_for_leg(&self, sens_values: &[i16; 3]) -> Vec<i16> {
         let values = self.0.iter().map(|neuron| neuron.value).collect();
         let out_accums: Vec<i16> = self
             .0
             .iter()
             .take(2)
-            .map(|neuron| neuron.accumulate(&values, sens_values))
+            .map(|neuron| neuron.accumulate(&values, &sens_values.to_vec()))
             .collect();
         let hid_accums = self.0[2..]
             .iter()
@@ -60,22 +60,25 @@ impl Leg {
 
     pub fn accumulate_for_bot(
         &self,
-        mut sens_value_lists: Vec<Vec<i16>>,
+        sens_value_lists: &Vec<[i16; 3]>,
         leg_index: usize,
     ) -> Vec<i16> {
         let values = self.0.iter().map(|neuron| neuron.value).collect();
-        let out_sens_values = &sens_value_lists[leg_index];
+        let out_sens_values = sens_value_lists[leg_index].to_vec();
         let out_accums: Vec<i16> = self
             .0
             .iter()
             .take(2)
             .map(|neuron| neuron.accumulate(&values, &out_sens_values))
             .collect();
-        sens_value_lists.remove(leg_index);
-        let hid_sens_values = sens_value_lists
-            .iter()
-            .map(|sens_values| sens_values[2])
-            .collect();
+        let hid_sens_values = [
+            sens_value_lists[0..leg_index].to_vec(),
+            sens_value_lists[leg_index + 1..].to_vec(),
+        ]
+        .concat()
+        .iter()
+        .map(|sens_values| sens_values[2])
+        .collect();
         let hid_accums = self.0[2..]
             .iter()
             .map(|neuron| neuron.accumulate(&values, &hid_sens_values))

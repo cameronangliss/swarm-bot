@@ -1,7 +1,7 @@
 use fastrand;
 use std::iter::repeat;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Neuron {
     pub value: i16,
     pub trans: i16,
