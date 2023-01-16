@@ -108,7 +108,7 @@ pub fn evolve_legs(legs: &Vec<Leg>, fits: &Vec<f32>, params: &LegParams) -> Vec<
         let child = create_leg_child(legs, fits, params.mut_rate);
         child_legs.push(child);
     }
-    let n = fastrand::usize(0..child_legs.len());
+    let n = fastrand::usize(0..=child_legs.len());
     child_legs.insert(n, elite_leg);
     child_legs
 }
