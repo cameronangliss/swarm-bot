@@ -115,8 +115,8 @@ pub fn evolve_legs(legs: &Vec<Leg>, fits: &Vec<f32>, params: &LegParams) -> Vec<
 
 fn create_leg_child(legs: &Vec<Leg>, fits: &Vec<f32>, mut_rate: f32) -> Leg {
     let parents = select(2, legs, fits);
-    let child_chrom = LegChrom::from(&parents[0])
-        .cross(&LegChrom::from(&parents[1]))
-        .mutate(mut_rate);
+    let chrom1 = LegChrom::from(&parents[0]);
+    let chrom2 = LegChrom::from(&parents[1]);
+    let child_chrom = chrom1.cross(&chrom2).mutate(mut_rate);
     Leg::from(&child_chrom)
 }
