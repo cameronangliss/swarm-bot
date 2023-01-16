@@ -1,4 +1,7 @@
 use fastrand;
+use std::fs;
+use std::io::{stdin, stdout, Write};
+use std::process::Command;
 
 use crate::chromosome::{Chromable, LegChrom};
 use crate::leg::{make_rand_leg, select, Leg};
@@ -13,19 +16,26 @@ pub struct LegParams {
 }
 
 impl LegParams {
+    fn label(&self) -> String {
+        format!(
+            "Leg_{}_{}_{}_{}_{}",
+            self.pop_size, self.num_neurons, self.iters, self.mut_rate, self.seed
+        )
+    }
+
     pub fn init_leg_records(&self) -> LegRecords {
         let legs: Vec<Leg> = vec![self.num_neurons; self.pop_size]
             .iter()
             .map(|&num_neurons| make_rand_leg(num_neurons))
             .collect();
         let fits: Vec<f32> = legs.iter().map(|leg| leg.fit(self.iters)).collect();
-        let max_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
-        let max_index = fits.iter().position(|&fit| fit == max_fit).unwrap();
-        let max_leg = legs[max_index].clone();
+        let best_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
+        let best_index = fits.iter().position(|&fit| fit == best_fit).unwrap();
+        let best_leg = legs[best_index].clone();
         let avg_fit = fits.iter().sum::<f32>() / fits.len() as f32;
         LegRecords {
-            max_legs: vec![max_leg],
-            max_fits: vec![max_fit],
+            best_legs: vec![best_leg],
+            best_fits: vec![best_fit],
             avg_fits: vec![avg_fit],
             legs,
             fits,
@@ -35,26 +45,57 @@ impl LegParams {
 
 #[derive(Clone)]
 pub struct LegRecords {
-    pub max_legs: Vec<Leg>,
-    pub max_fits: Vec<f32>,
+    pub best_legs: Vec<Leg>,
+    pub best_fits: Vec<f32>,
     avg_fits: Vec<f32>,
     pub legs: Vec<Leg>,
     pub fits: Vec<f32>,
 }
 
 impl LegRecords {
-    pub fn compute_leg_ga(&mut self, params: &LegParams, gens: usize) -> LegRecords {
+    pub fn compute_leg_ga(&mut self, params: &LegParams, gens: usize) {
         for _ in 0..gens {
             self.legs = evolve_legs(&self.legs, &self.fits, params);
             self.fits = self.legs.iter().map(|leg| leg.fit(params.iters)).collect();
-            let max_fit = *self.fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
-            self.max_fits.push(max_fit);
-            let max_index = self.fits.iter().position(|&fit| fit == max_fit).unwrap();
-            self.max_legs.push(self.legs[max_index].clone());
+            let best_fit = *self.fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
+            self.best_fits.push(best_fit);
+            let best_index = self.fits.iter().position(|&fit| fit == best_fit).unwrap();
+            self.best_legs.push(self.legs[best_index].clone());
             self.avg_fits
                 .push(self.fits.iter().sum::<f32>() / self.fits.len() as f32);
         }
-        self.clone()
+    }
+
+    pub fn plot(&self, params: &LegParams, setting: &str) {
+        let gens = if setting == "default" {
+            self.best_fits.len()
+        } else if setting == "evo" {
+            print!("\nEnter the generation you would like to plot up to: ");
+            stdout().flush().unwrap();
+            let mut input = String::new();
+            stdin().read_line(&mut input).unwrap();
+            input.parse::<usize>().unwrap() + 1
+        } else {
+            print!("\nEnter desired generation of leg: ");
+            stdout().flush().unwrap();
+            let mut input = String::new();
+            stdin().read_line(&mut input).unwrap();
+            input.parse::<usize>().unwrap() + 1
+        };
+        let leg = self.best_legs.iter().last().unwrap();
+        let (xs, ys): (Vec<i16>, Vec<i16>) = leg.test(params.iters).iter().map(|pos| *pos).unzip();
+        let positions = vec![xs, ys];
+        let data = format!("{:?}\n{:?}\n{:?}", self.best_fits, self.avg_fits, positions);
+        fs::write("datafile.txt", data).unwrap();
+        Command::new("python")
+            .args([
+                "plot_leg_records.py",
+                &params.label(),
+                setting,
+                &(gens - 1).to_string(),
+            ])
+            .spawn()
+            .unwrap();
     }
 }
 
@@ -73,7 +114,7 @@ pub fn evolve_legs(legs: &Vec<Leg>, fits: &Vec<f32>, params: &LegParams) -> Vec<
 }
 
 fn create_leg_child(legs: &Vec<Leg>, fits: &Vec<f32>, mut_rate: f32) -> Leg {
-    let parents = select(2, legs.clone(), fits.clone());
+    let parents = select(2, legs, fits);
     let child_chrom = LegChrom::from(&parents[0])
         .cross(&LegChrom::from(&parents[1]))
         .mutate(mut_rate);

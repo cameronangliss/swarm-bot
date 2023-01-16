@@ -1,5 +1,3 @@
-use itertools::iterate;
-
 use crate::leg_env::LegEnv;
 use crate::neuron::{make_rand_neuron, Neuron};
 
@@ -28,19 +26,21 @@ impl Leg {
     }
 
     pub fn test(&self, iters: usize) -> Vec<(i16, i16)> {
-        let init_env = LegEnv::default();
-        iterate((self.clone(), init_env), |(leg, env)| leg.step(env))
-            .take(iters + 1)
-            .map(|(_, env)| (env.x_pos, env.y_pos))
-            .collect()
+        let mut leg = self.clone();
+        let mut env = LegEnv::default();
+        let mut positions = vec![(env.x_pos, env.y_pos)];
+        for _ in 0..iters {
+            leg.step(&mut env);
+            positions.push((env.x_pos, env.y_pos));
+        }
+        positions
     }
 
-    fn step(&self, env: &LegEnv) -> (Leg, LegEnv) {
+    fn step(&mut self, env: &mut LegEnv) {
         let accums = self.accumulate_for_leg(&env.sens_values);
         let activs = self.activate(&accums);
-        let upd_leg = self.update_values(&activs);
-        let upd_env = env.act(activs[0] as usize, activs[1] as usize);
-        (upd_leg, upd_env)
+        self.update_values(&activs);
+        env.act(activs[0] as usize, activs[1] as usize);
     }
 
     fn accumulate_for_leg(&self, sens_values: &[i16; 3]) -> Vec<i16> {
@@ -94,30 +94,26 @@ impl Leg {
             .collect()
     }
 
-    pub fn update_values(&self, values: &Vec<i16>) -> Leg {
-        let neurons = self
-            .0
-            .iter()
+    pub fn update_values(&mut self, values: &Vec<i16>) {
+        self.0
+            .iter_mut()
             .zip(values.iter())
-            .map(|(neuron, &value)| Neuron {
-                value,
-                ..neuron.clone()
-            })
-            .collect();
-        Leg(neurons)
+            .for_each(|(neuron, &value)| neuron.value = value);
     }
 }
 
-pub fn select(num_select: usize, mut legs: Vec<Leg>, mut fits: Vec<f32>) -> Vec<Leg> {
+pub fn select(num_select: usize, legs: &Vec<Leg>, fits: &Vec<f32>) -> Vec<Leg> {
     if num_select <= 0 {
         vec![]
     } else if num_select >= legs.len() {
         legs.to_vec()
     } else {
+        let mut legs_left = legs.clone();
+        let mut fits_left = fits.clone();
         let mut selected_legs = vec![];
         for _ in 0..num_select {
-            let min_fit = fits.iter().min_by(|a, b| a.total_cmp(b)).unwrap();
-            let shifted_fits: Vec<f32> = fits.iter().map(|fit| fit - min_fit + 1.0).collect();
+            let min_fit = fits_left.iter().min_by(|a, b| a.total_cmp(b)).unwrap();
+            let shifted_fits: Vec<f32> = fits_left.iter().map(|fit| fit - min_fit + 1.0).collect();
             let normed_fits: Vec<f32> = shifted_fits
                 .iter()
                 .map(|shifted_fit| shifted_fit / shifted_fits.iter().sum::<f32>())
@@ -136,9 +132,9 @@ pub fn select(num_select: usize, mut legs: Vec<Leg>, mut fits: Vec<f32>) -> Vec<
                 .map(|prob| *prob)
                 .collect::<Vec<f32>>()
                 .len();
-            selected_legs.push(legs[index].clone());
-            legs.remove(index);
-            fits.remove(index);
+            selected_legs.push(legs_left[index].clone());
+            legs_left.remove(index);
+            fits_left.remove(index);
         }
         selected_legs
     }

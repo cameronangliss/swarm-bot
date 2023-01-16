@@ -23,101 +23,78 @@ impl Default for LegEnv {
 }
 
 impl LegEnv {
-    pub fn act(&self, x_sig: usize, y_sig: usize) -> LegEnv {
-        let x_mom = self.next_x_mom(x_sig);
-        let y_mom = self.next_y_mom(y_sig);
-        let x_pos = self.next_x_pos(x_sig, x_mom);
-        let y_pos = self.next_y_pos(y_sig, y_mom);
-        let sens_value1 = if x_pos == XS[0] { 15 } else { 0 };
-        let sens_value2 = if x_pos == XS[15] { 15 } else { 0 };
-        let sens_value3 = if y_pos == YS[0] { 15 } else { 0 };
-        let sens_values = [sens_value1, sens_value2, sens_value3];
-        LegEnv {
-            sens_values,
-            x_pos,
-            y_pos,
-            x_mom,
-            y_mom,
-        }
+    pub fn act(&mut self, x_sig: usize, y_sig: usize) {
+        self.next_x_mom(x_sig);
+        self.next_y_mom(y_sig);
+        self.next_x_pos(x_sig);
+        self.next_y_pos(y_sig);
+        self.sense();
     }
 
-    fn next_x_mom(&self, signal: usize) -> i16 {
+    fn sense(&mut self) {
+        let sens_value1 = if self.x_pos == XS[0] { 15 } else { 0 };
+        let sens_value2 = if self.x_pos == XS[15] { 15 } else { 0 };
+        let sens_value3 = if self.y_pos == YS[0] { 15 } else { 0 };
+        self.sens_values = [sens_value1, sens_value2, sens_value3];
+    }
+
+    fn next_x_mom(&mut self, signal: usize) {
         let request = XS[signal];
         let delta = request - self.x_pos;
-        if self.x_mom.signum() != delta.signum() {
-            if self.x_mom < 0 {
-                1
-            } else {
-                -1
-            }
-        } else if request == self.x_pos {
-            0
-        } else if self.x_mom.abs() == 3 {
-            self.x_mom
-        } else if self.x_mom < 0 {
-            self.x_mom - 1
-        } else if self.x_mom > 0 {
-            self.x_mom + 1
-        } else if delta > 0 {
-            1
-        } else {
-            -1
-        }
+        self.x_mom = match self.x_mom {
+            x_mom if x_mom.signum() != delta.signum() => delta.signum(),
+            _ if self.x_pos == request => 0,
+            x_mom if x_mom.abs() == 3 => x_mom,
+            x_mom if x_mom < 0 => x_mom - 1,
+            x_mom if x_mom > 0 => x_mom + 1,
+            _ if delta > 0 => 1,
+            _ => -1,
+        };
     }
 
-    fn next_y_mom(&self, signal: usize) -> i16 {
+    fn next_y_mom(&mut self, signal: usize) {
         let request = YS[signal];
         let delta = request - self.y_pos;
-        if self.y_mom.signum() != delta.signum() {
-            if self.y_mom < 0 {
-                1
+        self.y_mom = match self.y_mom {
+            y_mom if y_mom.signum() != delta.signum() => delta.signum(),
+            _ if self.y_pos == request => 0,
+            y_mom if y_mom.abs() == 3 => y_mom,
+            y_mom if y_mom < 0 => y_mom - 1,
+            y_mom if y_mom > 0 => y_mom + 1,
+            _ if delta > 0 => 1,
+            _ => -1,
+        };
+    }
+
+    fn next_x_pos(&mut self, signal: usize) {
+        if self.x_mom != 0 {
+            let request = XS[signal];
+            let delta = request - self.x_pos;
+            let max_dist = (10.0 * 2.0_f32.powf(self.x_mom.abs() as f32 - 3.0)).floor() as i16;
+            let valid_request = if delta.abs() <= max_dist {
+                request
             } else {
-                -1
+                self.x_pos + delta.signum() * max_dist
+            };
+            if self.x_mom.signum() == delta.signum() {
+                self.x_pos = valid_request
             }
-        } else if request == self.y_pos {
-            0
-        } else if self.y_mom.abs() == 3 {
-            self.y_mom
-        } else if self.y_mom < 0 {
-            self.y_mom - 1
-        } else if self.y_mom > 0 {
-            self.y_mom + 1
-        } else if delta > 0 {
-            1
-        } else {
-            -1
         }
     }
 
-    fn next_x_pos(&self, signal: usize, mom: i16) -> i16 {
-        let request = XS[signal];
-        let delta = request - self.x_pos;
-        let max_dist = (10.0 * 2.0_f32.powf(mom.abs() as f32 - 3.0)).floor() as i16;
-        let valid_request = if delta.abs() <= max_dist {
-            request
-        } else {
-            self.x_pos + delta.signum() * max_dist
-        };
-        if self.x_mom.signum() == delta.signum() {
-            valid_request
-        } else {
-            self.x_pos
-        }
-    }
-
-    fn next_y_pos(&self, signal: usize, mom: i16) -> i16 {
-        let request = YS[signal];
-        let delta = request - self.y_pos;
-        let max_dist = (5.0 * 2.0_f32.powf(mom.abs() as f32 - 3.0)).floor() as i16;
-        let valid_request = if delta.abs() <= max_dist {
-            request
-        } else {
-            self.y_pos + delta.signum() * max_dist
-        };
-        if self.y_mom.signum() == delta.signum() {
-            valid_request
-        } else {
-            self.y_pos
+    fn next_y_pos(&mut self, signal: usize) {
+        if self.y_mom != 0 {
+            let request = YS[signal];
+            let delta = request - self.y_pos;
+            let max_dist = (5.0 * 2.0_f32.powf(self.y_mom.abs() as f32 - 3.0)).floor() as i16;
+            let valid_request = if delta.abs() <= max_dist {
+                request
+            } else {
+                self.y_pos + delta.signum() * max_dist
+            };
+            if self.y_mom.signum() == delta.signum() {
+                self.y_pos = valid_request
+            }
         }
     }
 }

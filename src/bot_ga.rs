@@ -24,17 +24,13 @@ impl BotParams {
     }
 
     pub fn init_bot_records(&self) -> BotRecords {
-        // let leg_lists = transpose(&vec![self.num_neurons; self.pop_size]
-        //     .iter()
-        //     .map(|&num_neurons| make_rand_bot(num_neurons).0)
-        //     .collect());
-        // let fit_lists = leg_lists.iter().map(|legs| legs.iter().map(|leg| leg.fit(LegParams::from(self).iters)).collect()).collect();
         let leg_params = LegParams::from(self);
         let leg_record_list: Vec<LegRecords> = vec![leg_params; 6]
             .iter()
             .map(|params| {
                 let mut records = params.init_leg_records();
-                records.compute_leg_ga(params, self.init_gens)
+                records.compute_leg_ga(params, self.init_gens);
+                records
             })
             .collect();
         let leg_lists = leg_record_list
@@ -46,12 +42,11 @@ impl BotParams {
             .map(|legs| Bot(legs.clone()))
             .collect();
         let fits: Vec<f32> = bots.iter().map(|bot| bot.fit(self.iters)).collect();
+        let fit_lists = transpose(&fits.iter().map(|&fit| vec![fit; 6]).collect());
         let max_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
         let max_index = fits.iter().position(|&fit| fit == max_fit).unwrap();
         let max_bot = bots[max_index].clone();
         let avg_fit = fits.iter().sum::<f32>() / fits.len() as f32;
-        let leg_lists = transpose(&bots.iter().map(|bot| bot.0.clone()).collect());
-        let fit_lists = transpose(&fits.iter().map(|&fit| vec![fit; 6]).collect());
         BotRecords {
             max_bots: vec![max_bot.clone()],
             max_fits: vec![max_fit],
@@ -88,7 +83,7 @@ pub struct BotRecords {
 }
 
 impl BotRecords {
-    pub fn compute_bot_ga(&mut self, params: &BotParams, gens: usize) -> BotRecords {
+    pub fn compute_bot_ga(&mut self, params: &BotParams, gens: usize) {
         for _ in 0..gens {
             self.leg_lists = self
                 .leg_lists
@@ -116,23 +111,22 @@ impl BotRecords {
             self.avg_fits
                 .push(fits.iter().sum::<f32>() / fits.len() as f32);
         }
-        self.clone()
     }
 
-    pub fn plot(&self, params: &BotParams, setting: &str) -> () {
+    pub fn plot(&self, params: &BotParams, setting: &str) {
         let gens = if setting == "default" {
             self.best_fits.len()
         } else if setting == "evo" {
             print!("\nEnter the generation you would like to plot up to: ");
             stdout().flush().unwrap();
             let mut input = String::new();
-            stdin().read_line(&mut input).expect("failed to readline");
+            stdin().read_line(&mut input).unwrap();
             input.parse::<usize>().unwrap() + 1
         } else {
             print!("\nEnter desired generation of bot: ");
             stdout().flush().unwrap();
             let mut input = String::new();
-            stdin().read_line(&mut input).expect("failed to readline");
+            stdin().read_line(&mut input).unwrap();
             input.parse::<usize>().unwrap() + 1
         };
         let bot = if setting == "max" {
@@ -153,7 +147,7 @@ impl BotRecords {
             "{:?}\n{:?}\n{:?}\n{:?}\n{:?}",
             self.max_fits, self.best_fits, self.avg_fits, position_lists, bot_path
         );
-        fs::write("datafile.txt", data).expect("Unable to write file");
+        fs::write("datafile.txt", data).unwrap();
         Command::new("python")
             .args([
                 "plot_bot_records.py",
@@ -162,7 +156,7 @@ impl BotRecords {
                 &(gens - 1).to_string(),
             ])
             .spawn()
-            .expect("Call to plot_bot_recrods.py failed.");
+            .unwrap();
     }
 }
 

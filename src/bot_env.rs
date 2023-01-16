@@ -37,11 +37,11 @@ fn get_leg_effects(leg_velocities_rel_to_bot: &Vec<i16>, leg_heights: &Vec<i16>)
         .iter()
         .map(|&n| leg_velocities_rel_to_bot[n])
         .collect();
-    let root = (29_f32.powf(0.5) - 5.0) / 2.0;
     let leg_effectfulness_scores: Vec<f32> = leg_heights
         .iter()
         .map(|&height| {
             if height < 5 {
+                let root = (29_f32.powf(0.5) - 5.0) / 2.0;
                 1.0 / (height as f32 + root) + root
             } else {
                 0.0
