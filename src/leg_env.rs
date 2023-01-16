@@ -43,12 +43,10 @@ impl LegEnv {
         let delta = request - self.x_pos;
         self.x_mom = match self.x_mom {
             x_mom if x_mom.signum() != delta.signum() => delta.signum(),
-            _ if self.x_pos == request => 0,
+            _ if delta == 0 => 0,
             x_mom if x_mom.abs() == 3 => x_mom,
-            x_mom if x_mom < 0 => x_mom - 1,
             x_mom if x_mom > 0 => x_mom + 1,
-            _ if delta > 0 => 1,
-            _ => -1,
+            _ => self.x_mom - 1,
         };
     }
 
@@ -57,12 +55,10 @@ impl LegEnv {
         let delta = request - self.y_pos;
         self.y_mom = match self.y_mom {
             y_mom if y_mom.signum() != delta.signum() => delta.signum(),
-            _ if self.y_pos == request => 0,
+            _ if delta == 0 => 0,
             y_mom if y_mom.abs() == 3 => y_mom,
-            y_mom if y_mom < 0 => y_mom - 1,
             y_mom if y_mom > 0 => y_mom + 1,
-            _ if delta > 0 => 1,
-            _ => -1,
+            _ => self.y_mom - 1,
         };
     }
 
@@ -71,13 +67,10 @@ impl LegEnv {
             let request = XS[signal];
             let delta = request - self.x_pos;
             let max_dist = (10.0 * 2.0_f32.powf(self.x_mom.abs() as f32 - 3.0)).floor() as i16;
-            let valid_request = if delta.abs() <= max_dist {
-                request
+            if delta.abs() <= max_dist {
+                self.x_pos = request;
             } else {
-                self.x_pos + delta.signum() * max_dist
-            };
-            if self.x_mom.signum() == delta.signum() {
-                self.x_pos = valid_request
+                self.x_pos += delta.signum() * max_dist;
             }
         }
     }
@@ -87,13 +80,10 @@ impl LegEnv {
             let request = YS[signal];
             let delta = request - self.y_pos;
             let max_dist = (5.0 * 2.0_f32.powf(self.y_mom.abs() as f32 - 3.0)).floor() as i16;
-            let valid_request = if delta.abs() <= max_dist {
-                request
+            if delta.abs() <= max_dist {
+                self.y_pos = request;
             } else {
-                self.y_pos + delta.signum() * max_dist
-            };
-            if self.y_mom.signum() == delta.signum() {
-                self.y_pos = valid_request
+                self.y_pos += delta.signum() * max_dist;
             }
         }
     }
