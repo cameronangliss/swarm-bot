@@ -1,4 +1,4 @@
-use swarm_bot::bot_ga::BotParams;
+use swarm_bot::bot_ga::{transpose, BotParams};
 
 #[test]
 fn leg_ga() {
@@ -22,4 +22,11 @@ fn leg_ga() {
         assert_eq!(legs.len(), 20);
     }
     assert_ne!(leg_lists, records.leg_lists);
+}
+
+#[test]
+fn test_transpose() {
+    let matrix = vec![vec![1, 2, 3], vec![4, 5, 6]];
+    let trans_matrix = vec![vec![1, 4], vec![2, 5], vec![3, 6]];
+    assert_eq!(transpose(&matrix), trans_matrix);
 }

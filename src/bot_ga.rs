@@ -160,7 +160,7 @@ impl BotRecords {
     }
 }
 
-fn transpose<T>(matrix: &Vec<Vec<T>>) -> Vec<Vec<T>>
+pub fn transpose<T>(matrix: &Vec<Vec<T>>) -> Vec<Vec<T>>
 where
     T: Clone,
     T: Default,
