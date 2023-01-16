@@ -33,7 +33,7 @@ fn bot_main() {
     let mut records = params.init_bot_records();
     let elapsed = start.elapsed();
     println!("done! Elapsed time: {}s.", elapsed.as_secs());
-    while records.best_fits.iter().last().unwrap() < &700.0 {
+    loop {
         print!(
             "Computing up to {}th generation...",
             records.best_fits.len() + 999
@@ -45,7 +45,6 @@ fn bot_main() {
         let elapsed = start.elapsed();
         println!("done! Elapsed time: {}s.", elapsed.as_secs());
     }
-    println!("{:?}", records.max_bots.iter().last().unwrap());
 }
 
 fn request_bot_params() -> BotParams {
@@ -106,7 +105,7 @@ fn leg_main() {
     let mut records = params.init_leg_records();
     let elapsed = start.elapsed();
     println!("done! Elapsed time: {}s.", elapsed.as_secs());
-    while records.best_fits.iter().last().unwrap() < &400.0 {
+    loop {
         print!(
             "Computing up to {}th generation...",
             records.best_fits.len() + 999
@@ -118,7 +117,6 @@ fn leg_main() {
         let elapsed = start.elapsed();
         println!("done! Elapsed time: {}s.", elapsed.as_secs());
     }
-    println!("{:?}", records.best_legs.iter().last().unwrap());
 }
 
 fn request_leg_params() -> LegParams {
