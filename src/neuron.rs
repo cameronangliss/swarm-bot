@@ -13,14 +13,14 @@ pub fn make_rand_neuron(num_weights: usize, num_sens_weights: usize) -> Neuron {
     let value = fastrand::i16(0..=15);
     let trans = fastrand::i16(-511..=511);
     let stretch = fastrand::i16(-255..=255);
-    let weights = vec![-15..=15; num_weights]
-        .iter()
-        .map(|range| fastrand::i16(range.clone()))
-        .collect();
-    let sens_weights = vec![-15..=15; num_sens_weights]
-        .iter()
-        .map(|range| fastrand::i16(range.clone()))
-        .collect();
+    let mut weights = vec![];
+    for _ in 0..num_weights {
+        weights.push(fastrand::i16(-15..=15));
+    }
+    let mut sens_weights = vec![];
+    for _ in 0..num_sens_weights {
+        sens_weights.push(fastrand::i16(-15..=15));
+    }
     Neuron {
         value,
         trans,
@@ -50,8 +50,8 @@ impl Neuron {
                 0
             }
         } else {
-            let x = (self.trans - acc) as f32 / (self.stretch as f32);
-            (15.0 / (1.0 + x.exp())).round() as i16
+            let power = (self.trans - acc) as f32 / (self.stretch as f32);
+            (15.0 / (1.0 + power.exp())).round() as i16
         }
     }
 }

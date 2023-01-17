@@ -71,14 +71,10 @@ impl Leg {
             .take(2)
             .map(|neuron| neuron.accumulate(&values, &out_sens_values))
             .collect();
-        let hid_sens_values = [
-            sens_value_lists[0..leg_index].to_vec(),
-            sens_value_lists[leg_index + 1..].to_vec(),
-        ]
-        .concat()
-        .iter()
-        .map(|sens_values| sens_values[2])
-        .collect();
+        let hid_sens_values = remove(leg_index, sens_value_lists)
+            .iter()
+            .map(|sens_values| sens_values[2])
+            .collect();
         let hid_accums = self.0[2..]
             .iter()
             .map(|neuron| neuron.accumulate(&values, &hid_sens_values))
@@ -138,4 +134,11 @@ pub fn select(num_select: usize, legs: &Vec<Leg>, fits: &Vec<f32>) -> Vec<Leg> {
         }
         selected_legs
     }
+}
+
+fn remove<T>(i: usize, xs: &Vec<T>) -> Vec<T>
+where
+    T: Clone,
+{
+    [xs[0..i].to_vec(), xs[i + 1..].to_vec()].concat()
 }
