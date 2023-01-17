@@ -4,7 +4,7 @@ use std::process::Command;
 
 use crate::bot::Bot;
 use crate::leg::Leg;
-use crate::leg_ga::{evolve_legs, LegParams, LegRecords};
+use crate::leg_ga::{evolve_legs, LegParams};
 
 pub struct BotParams {
     pub pop_size: usize,
@@ -25,36 +25,31 @@ impl BotParams {
 
     pub fn init_bot_records(&self) -> BotRecords {
         let leg_params = LegParams::from(self);
-        let leg_record_list: Vec<LegRecords> = vec![leg_params; 6]
+        let leg_lists = vec![leg_params; 6]
             .iter()
             .map(|params| {
                 let mut records = params.init_leg_records();
                 records.compute_leg_ga(params, self.init_gens);
-                records
+                records.legs
             })
-            .collect();
-        let leg_lists = leg_record_list
-            .iter()
-            .map(|records| records.legs.clone())
             .collect();
         let bots: Vec<Bot> = transpose(&leg_lists)
             .iter()
             .map(|legs| Bot(legs.clone()))
             .collect();
         let fits: Vec<f32> = bots.iter().map(|bot| bot.fit(self.iters)).collect();
-        let fit_lists = transpose(&fits.iter().map(|&fit| vec![fit; 6]).collect());
-        let max_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
-        let max_index = fits.iter().position(|&fit| fit == max_fit).unwrap();
-        let max_bot = bots[max_index].clone();
+        let best_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
+        let best_index = fits.iter().position(|&fit| fit == best_fit).unwrap();
+        let best_bot = bots[best_index].clone();
         let avg_fit = fits.iter().sum::<f32>() / fits.len() as f32;
         BotRecords {
-            max_bots: vec![max_bot.clone()],
-            max_fits: vec![max_fit],
-            best_bot: max_bot,
-            best_fits: vec![max_fit],
+            max_bots: vec![best_bot.clone()],
+            max_fits: vec![best_fit],
+            best_bot,
+            best_fits: vec![best_fit],
             avg_fits: vec![avg_fit],
             leg_lists,
-            fit_lists,
+            fit_lists: vec![fits; 6],
         }
     }
 }
@@ -65,7 +60,7 @@ impl From<&BotParams> for LegParams {
             pop_size: params.pop_size,
             num_neurons: params.num_neurons,
             iters: params.iters,
-            mut_rate: 1e-2,
+            mut_rate: params.mut_rate,
             seed: params.seed,
         }
     }
@@ -96,7 +91,7 @@ impl BotRecords {
                 .map(|legs| Bot(legs.clone()))
                 .collect();
             let fits: Vec<f32> = bots.iter().map(|bot| bot.fit(params.iters)).collect();
-            self.fit_lists = transpose(&fits.iter().map(|&fit| vec![fit; 6]).collect());
+            self.fit_lists = vec![fits.clone(); 6];
             let best_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
             let best_index = fits.iter().position(|&fit| fit == best_fit).unwrap();
             self.best_bot = bots[best_index].clone();
