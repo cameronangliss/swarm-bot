@@ -110,9 +110,10 @@ pub fn select(num_select: usize, legs: &Vec<Leg>, fits: &Vec<f32>) -> Vec<Leg> {
         for _ in 0..num_select {
             let min_fit = fits_left.iter().min_by(|a, b| a.total_cmp(b)).unwrap();
             let shifted_fits: Vec<f32> = fits_left.iter().map(|fit| fit - min_fit + 1.0).collect();
+            let total_fits: f32 = shifted_fits.iter().sum();
             let normed_fits: Vec<f32> = shifted_fits
                 .iter()
-                .map(|shifted_fit| shifted_fit / shifted_fits.iter().sum::<f32>())
+                .map(|shifted_fit| shifted_fit / total_fits)
                 .collect();
             let prob_list = normed_fits[..normed_fits.len() - 1]
                 .iter()
