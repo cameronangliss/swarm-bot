@@ -81,14 +81,14 @@ impl Chromable<NeuronChrom> for NeuronChrom {
             .3
             .iter()
             .zip(chrom.3.iter())
-            .map(|(weight_bin1, weight_bin2)| cross_bins(&weight_bin1, &weight_bin2))
+            .map(|(weight_bin1, weight_bin2)| cross_bins(weight_bin1, weight_bin2))
             .collect();
         let sens_weight_bins = self
             .4
             .iter()
             .zip(chrom.4.iter())
             .map(|(sens_weight_bin1, sens_weight_bin2)| {
-                cross_bins(&sens_weight_bin1, &sens_weight_bin2)
+                cross_bins(sens_weight_bin1, sens_weight_bin2)
             })
             .collect();
         NeuronChrom(
@@ -107,12 +107,12 @@ impl Chromable<NeuronChrom> for NeuronChrom {
         let weight_bins = self
             .3
             .iter()
-            .map(|weight_bin| mutate_bin(&weight_bin, mut_rate))
+            .map(|weight_bin| mutate_bin(weight_bin, mut_rate))
             .collect();
         let sens_weight_bins = self
             .4
             .iter()
-            .map(|sens_weight_bin| mutate_bin(&sens_weight_bin, mut_rate))
+            .map(|sens_weight_bin| mutate_bin(sens_weight_bin, mut_rate))
             .collect();
         NeuronChrom(
             value_bin,
