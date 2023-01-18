@@ -23,11 +23,9 @@ impl Default for LegEnv {
 }
 
 impl LegEnv {
-    pub fn act(&mut self, x_sig: usize, y_sig: usize) {
-        self.next_x_mom(x_sig);
-        self.next_y_mom(y_sig);
-        self.next_x_pos(x_sig);
-        self.next_y_pos(y_sig);
+    pub fn act(&mut self, x_signal: usize, y_signal: usize) {
+        self.calc_momentum(x_signal, y_signal);
+        self.calc_position(x_signal, y_signal);
         self.sense();
     }
 
@@ -38,7 +36,12 @@ impl LegEnv {
         self.sens_values = [sens_value1, sens_value2, sens_value3];
     }
 
-    fn next_x_mom(&mut self, signal: usize) {
+    fn calc_momentum(&mut self, x_signal: usize, y_signal: usize) {
+        self.calc_x_mom(x_signal);
+        self.calc_y_mom(y_signal);
+    }
+
+    fn calc_x_mom(&mut self, signal: usize) {
         let request = XS[signal];
         let delta = request - self.x_pos;
         self.x_mom = match self.x_mom {
@@ -50,7 +53,7 @@ impl LegEnv {
         };
     }
 
-    fn next_y_mom(&mut self, signal: usize) {
+    fn calc_y_mom(&mut self, signal: usize) {
         let request = YS[signal];
         let delta = request - self.y_pos;
         self.y_mom = match self.y_mom {
@@ -62,7 +65,12 @@ impl LegEnv {
         };
     }
 
-    fn next_x_pos(&mut self, signal: usize) {
+    fn calc_position(&mut self, x_signal: usize, y_signal: usize) {
+        self.calc_x_pos(x_signal);
+        self.calc_y_pos(y_signal);
+    }
+
+    fn calc_x_pos(&mut self, signal: usize) {
         if self.x_mom != 0 {
             let request = XS[signal];
             let delta = request - self.x_pos;
@@ -75,7 +83,7 @@ impl LegEnv {
         }
     }
 
-    fn next_y_pos(&mut self, signal: usize) {
+    fn calc_y_pos(&mut self, signal: usize) {
         if self.y_mom != 0 {
             let request = YS[signal];
             let delta = request - self.y_pos;
