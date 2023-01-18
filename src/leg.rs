@@ -5,11 +5,15 @@ use crate::neuron::{make_rand_neuron, Neuron};
 pub struct Leg(pub Vec<Neuron>);
 
 pub fn make_rand_leg(num_neurons: usize) -> Leg {
-    let neurons = [vec![3, 3], vec![5; num_neurons - 2]]
-        .concat()
-        .iter()
-        .map(|&num_sensor_weights| make_rand_neuron(num_neurons, num_sensor_weights))
-        .collect();
+    let out_neuron1 = make_rand_neuron(num_neurons, 3);
+    let out_neuron2 = make_rand_neuron(num_neurons, 3);
+    let out_neurons = vec![out_neuron1, out_neuron2];
+    let mut hid_neurons = vec![];
+    for _ in 0..num_neurons - 2 {
+        let hid_neuron = make_rand_neuron(num_neurons, 5);
+        hid_neurons.push(hid_neuron);
+    }
+    let neurons = [out_neurons, hid_neurons].concat();
     Leg(neurons)
 }
 

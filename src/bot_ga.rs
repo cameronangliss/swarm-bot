@@ -18,21 +18,22 @@ pub struct BotParams {
 impl BotParams {
     fn label(&self) -> String {
         format!(
-            "Bot_{}_{}_{}_{}_{}_{}",
+            "Bot_{}_{}_{}_{}_{:e}_{}",
             self.pop_size, self.num_neurons, self.init_gens, self.iters, self.mut_rate, self.seed
         )
     }
 
     pub fn init_bot_records(&self) -> BotRecords {
-        let leg_params = LegParams::from(self);
-        let leg_lists = vec![leg_params; 6]
-            .iter()
-            .map(|params| {
-                let mut records = params.init_leg_records();
-                records.compute_leg_ga(params, self.init_gens);
-                records.legs
-            })
-            .collect();
+        let leg_params = LegParams {
+            mut_rate: 1e-2,
+            ..LegParams::from(self)
+        };
+        let mut leg_lists = vec![];
+        for _ in 0..6 {
+            let mut records = leg_params.init_leg_records();
+            records.compute_leg_ga(&leg_params, self.init_gens);
+            leg_lists.push(records.legs);
+        }
         let bots: Vec<Bot> = transpose(&leg_lists)
             .iter()
             .map(|legs| Bot(legs.clone()))
@@ -93,9 +94,9 @@ impl BotRecords {
             let fits: Vec<f32> = bots.iter().map(|bot| bot.fit(params.iters)).collect();
             self.fit_lists = vec![fits.clone(); 6];
             let best_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
+            self.best_fits.push(best_fit);
             let best_index = fits.iter().position(|&fit| fit == best_fit).unwrap();
             self.best_bot = bots[best_index].clone();
-            self.best_fits.push(best_fit);
             let prev_max_fit = self.max_fits.iter().last().unwrap();
             if best_fit > *prev_max_fit {
                 self.max_bots.push(bots[best_index].clone());
@@ -103,8 +104,8 @@ impl BotRecords {
             } else {
                 self.max_fits.push(*prev_max_fit);
             }
-            self.avg_fits
-                .push(fits.iter().sum::<f32>() / fits.len() as f32);
+            let avg_fit = fits.iter().sum::<f32>() / fits.len() as f32;
+            self.avg_fits.push(avg_fit);
         }
     }
 

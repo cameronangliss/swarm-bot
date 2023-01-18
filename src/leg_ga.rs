@@ -18,16 +18,17 @@ pub struct LegParams {
 impl LegParams {
     fn label(&self) -> String {
         format!(
-            "Leg_{}_{}_{}_{}_{}",
+            "Leg_{}_{}_{}_{:e}_{}",
             self.pop_size, self.num_neurons, self.iters, self.mut_rate, self.seed
         )
     }
 
     pub fn init_leg_records(&self) -> LegRecords {
-        let legs: Vec<Leg> = vec![self.num_neurons; self.pop_size]
-            .iter()
-            .map(|&num_neurons| make_rand_leg(num_neurons))
-            .collect();
+        let mut legs = vec![];
+        for _ in 0..self.pop_size {
+            let leg = make_rand_leg(self.num_neurons);
+            legs.push(leg);
+        }
         let fits: Vec<f32> = legs.iter().map(|leg| leg.fit(self.iters)).collect();
         let best_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
         let best_index = fits.iter().position(|&fit| fit == best_fit).unwrap();
@@ -60,9 +61,10 @@ impl LegRecords {
             let best_fit = *self.fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
             self.best_fits.push(best_fit);
             let best_index = self.fits.iter().position(|&fit| fit == best_fit).unwrap();
-            self.best_legs.push(self.legs[best_index].clone());
-            self.avg_fits
-                .push(self.fits.iter().sum::<f32>() / self.fits.len() as f32);
+            let best_leg = self.legs[best_index].clone();
+            self.best_legs.push(best_leg);
+            let avg_fit = self.fits.iter().sum::<f32>() / self.fits.len() as f32;
+            self.avg_fits.push(avg_fit);
         }
     }
 
