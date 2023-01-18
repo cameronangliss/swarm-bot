@@ -120,8 +120,7 @@ impl NeuronChrom {
 }
 
 fn cross_bins(bin1: &str, bin2: &str) -> String {
-    let r = fastrand::f32();
-    if r < 0.5 {
+    if fastrand::bool() {
         bin1.to_string()
     } else {
         bin2.to_string()
