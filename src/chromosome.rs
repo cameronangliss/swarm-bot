@@ -3,19 +3,14 @@ use fastrand;
 use crate::leg::Leg;
 use crate::neuron::Neuron;
 
-pub trait Chromable<T> {
-    fn cross(&self, chrom: &T) -> T;
-    fn mutate(&self, mut_rate: f32) -> T;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 /// Leg Chromosome
 
 #[derive(Debug)]
 pub struct LegChrom(pub Vec<NeuronChrom>);
 
-impl Chromable<LegChrom> for LegChrom {
-    fn cross(&self, chrom: &LegChrom) -> LegChrom {
+impl LegChrom {
+    pub fn cross(&self, chrom: &LegChrom) -> LegChrom {
         let neuron_chroms = self
             .0
             .iter()
@@ -25,7 +20,7 @@ impl Chromable<LegChrom> for LegChrom {
         LegChrom(neuron_chroms)
     }
 
-    fn mutate(&self, mut_rate: f32) -> LegChrom {
+    pub fn mutate(&self, mut_rate: f32) -> LegChrom {
         let neuron_chroms = self
             .0
             .iter()
@@ -72,8 +67,8 @@ pub struct NeuronChrom(
     pub Vec<String>,
 );
 
-impl Chromable<NeuronChrom> for NeuronChrom {
-    fn cross(&self, chrom: &NeuronChrom) -> NeuronChrom {
+impl NeuronChrom {
+    pub fn cross(&self, chrom: &NeuronChrom) -> NeuronChrom {
         let value_bin = cross_bins(&self.0, &chrom.0);
         let trans_bin = cross_bins(&self.1, &chrom.1);
         let stretch_bin = cross_bins(&self.2, &chrom.2);
@@ -125,17 +120,12 @@ impl Chromable<NeuronChrom> for NeuronChrom {
 }
 
 fn cross_bins(bin1: &str, bin2: &str) -> String {
-    bin1.chars()
-        .zip(bin2.chars())
-        .map(|(bit1, bit2)| {
-            let r = fastrand::f32();
-            if r > 0.5 {
-                bit1
-            } else {
-                bit2
-            }
-        })
-        .collect()
+    let r = fastrand::f32();
+    if r < 0.5 {
+        bin1.to_string()
+    } else {
+        bin2.to_string()
+    }
 }
 
 fn mutate_bin(bin: &str, mut_rate: f32) -> String {
