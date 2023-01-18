@@ -3,7 +3,7 @@ use std::fs;
 use std::io::{stdin, stdout, Write};
 use std::process::Command;
 
-use crate::chromosome::{Chromable, LegChrom};
+use crate::chromosome::LegChrom;
 use crate::leg::{make_rand_leg, select, Leg};
 
 #[derive(Clone)]
