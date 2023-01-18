@@ -41,9 +41,13 @@ def plotFits():
 
 
 def plotLegMotion():
-    legMovesX = positions[0][:101]
-    legMovesY = positions[1][:101]
-    plt.plot(legMovesX, legMovesY, color="dimgrey", linewidth=1.2)
+    xs = positions[0]
+    ys = positions[1]
+    xMin = min(xs)
+    xMax = max(xs)
+    xRange = xMax - xMin + 10
+    plt.plot(xs, ys, color="dimgrey", linewidth=1.2)
+    plt.axis([-5, xMax + 5, -xRange / 20, 19 / 20 * xRange])
     plt.xlabel("Horizontal Position (mm)")
     plt.ylabel("Vertical Position (mm)")
     plt.title(legTitle)
