@@ -1,3 +1,5 @@
+use std::iter::repeat_with;
+
 use crate::leg_env::LegEnv;
 use crate::neuron::{make_rand_neuron, Neuron};
 
@@ -5,14 +7,12 @@ use crate::neuron::{make_rand_neuron, Neuron};
 pub struct Leg(pub Vec<Neuron>);
 
 pub fn make_rand_leg(num_neurons: usize) -> Leg {
-    let out_neuron1 = make_rand_neuron(num_neurons, 3);
-    let out_neuron2 = make_rand_neuron(num_neurons, 3);
-    let out_neurons = vec![out_neuron1, out_neuron2];
-    let mut hid_neurons = vec![];
-    for _ in 0..num_neurons - 2 {
-        let hid_neuron = make_rand_neuron(num_neurons, 5);
-        hid_neurons.push(hid_neuron);
-    }
+    let out_neurons: Vec<Neuron> = repeat_with(|| make_rand_neuron(num_neurons, 3))
+        .take(2)
+        .collect();
+    let hid_neurons = repeat_with(|| make_rand_neuron(num_neurons, 5))
+        .take(num_neurons - 2)
+        .collect();
     let neurons = [out_neurons, hid_neurons].concat();
     Leg(neurons)
 }

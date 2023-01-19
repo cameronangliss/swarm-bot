@@ -1,4 +1,5 @@
 use fastrand;
+use std::iter::repeat_with;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Neuron {
@@ -13,14 +14,12 @@ pub fn make_rand_neuron(num_weights: usize, num_sens_weights: usize) -> Neuron {
     let value = fastrand::i16(0..=15);
     let trans = fastrand::i16(-511..=511);
     let stretch = fastrand::i16(-255..=255);
-    let mut weights = vec![];
-    for _ in 0..num_weights {
-        weights.push(fastrand::i16(-15..=15));
-    }
-    let mut sens_weights = vec![];
-    for _ in 0..num_sens_weights {
-        sens_weights.push(fastrand::i16(-15..=15));
-    }
+    let weights = repeat_with(|| fastrand::i16(-15..=15))
+        .take(num_weights)
+        .collect();
+    let sens_weights = repeat_with(|| fastrand::i16(-15..=15))
+        .take(num_sens_weights)
+        .collect();
     Neuron {
         value,
         trans,

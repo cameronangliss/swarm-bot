@@ -1,6 +1,7 @@
 use fastrand;
 use std::fs;
 use std::io::{stdin, stdout, Write};
+use std::iter::repeat_with;
 use std::process::Command;
 
 use crate::chromosome::LegChrom;
@@ -24,11 +25,9 @@ impl LegParams {
     }
 
     pub fn init_leg_records(&self) -> LegRecords {
-        let mut legs = vec![];
-        for _ in 0..self.pop_size {
-            let leg = make_rand_leg(self.num_neurons);
-            legs.push(leg);
-        }
+        let legs: Vec<Leg> = repeat_with(|| make_rand_leg(self.num_neurons))
+            .take(self.pop_size)
+            .collect();
         let fits: Vec<f32> = legs.iter().map(|leg| leg.fit(self.iters)).collect();
         let best_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
         let best_index = fits.iter().position(|&fit| fit == best_fit).unwrap();
@@ -105,11 +104,9 @@ pub fn evolve_legs(legs: &Vec<Leg>, fits: &Vec<f32>, params: &LegParams) -> Vec<
     let max_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
     let elite_index = fits.iter().position(|&fit| fit == max_fit).unwrap();
     let elite_leg = legs[elite_index].clone();
-    let mut child_legs = vec![];
-    for _ in 0..params.pop_size - 1 {
-        let child = create_leg_child(legs, fits, params.mut_rate);
-        child_legs.push(child);
-    }
+    let mut child_legs: Vec<Leg> = repeat_with(|| create_leg_child(legs, fits, params.mut_rate))
+        .take(params.pop_size - 1)
+        .collect();
     let n = fastrand::usize(0..=child_legs.len());
     child_legs.insert(n, elite_leg);
     child_legs
