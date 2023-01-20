@@ -1,7 +1,8 @@
 use fastrand;
+use serde_derive::{Deserialize, Serialize};
 use std::iter::repeat_with;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Neuron {
     pub value: i16,
     pub trans: i16,

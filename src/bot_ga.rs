@@ -1,43 +1,42 @@
+use fastrand;
+use serde_derive::{Deserialize, Serialize};
+use serde_json;
 use std::fs;
 use std::io::{stdin, stdout, Write};
+use std::iter::repeat_with;
 use std::process::Command;
 
-use crate::bot::Bot;
+use crate::bot::{make_rand_bot, Bot};
 use crate::leg::Leg;
 use crate::leg_ga::{evolve_legs, LegParams};
 
 pub struct BotParams {
     pub pop_size: usize,
     pub num_neurons: usize,
-    pub init_gens: usize,
     pub iters: usize,
     pub mut_rate: f32,
     pub seed: u64,
 }
 
 impl BotParams {
-    fn label(&self) -> String {
+    pub fn label(&self) -> String {
         format!(
-            "Bot_{}_{}_{}_{}_{:e}_{}",
-            self.pop_size, self.num_neurons, self.init_gens, self.iters, self.mut_rate, self.seed
+            "Bot_{}_{}_{}_{:e}_{}",
+            self.pop_size, self.num_neurons, self.iters, self.mut_rate, self.seed
         )
     }
 
+    pub fn load_records(&self) -> BotRecords {
+        let filepath = format!("runs/{}.txt", self.label());
+        let save_str = fs::read_to_string(filepath).unwrap();
+        serde_json::from_str(&save_str).unwrap()
+    }
+
     pub fn init_bot_records(&self) -> BotRecords {
-        let leg_params = LegParams {
-            mut_rate: 1e-2,
-            ..LegParams::from(self)
-        };
-        let mut leg_lists = vec![];
-        for _ in 0..6 {
-            let mut records = leg_params.init_leg_records();
-            records.compute_leg_ga(&leg_params, self.init_gens);
-            leg_lists.push(records.legs);
-        }
-        let bots: Vec<Bot> = transpose(&leg_lists)
-            .iter()
-            .map(|legs| Bot(legs.clone()))
+        let bots: Vec<Bot> = repeat_with(|| make_rand_bot(self.num_neurons))
+            .take(self.pop_size)
             .collect();
+        let leg_lists = transpose(&bots.iter().map(|bot| bot.0.clone()).collect());
         let fits: Vec<f32> = bots.iter().map(|bot| bot.fit(self.iters)).collect();
         let best_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
         let best_index = fits.iter().position(|&fit| fit == best_fit).unwrap();
@@ -67,7 +66,7 @@ impl From<&BotParams> for LegParams {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct BotRecords {
     pub max_bots: Vec<Bot>,
     pub max_fits: Vec<f32>,
@@ -153,6 +152,12 @@ impl BotRecords {
             ])
             .spawn()
             .unwrap();
+    }
+
+    pub fn save(&self, params: &BotParams) {
+        let filepath = format!("runs/{}.txt", params.label());
+        let save_str = serde_json::to_string(&(self, fastrand::get_seed())).unwrap();
+        fs::write(filepath, save_str).unwrap();
     }
 }
 

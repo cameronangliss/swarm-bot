@@ -1,9 +1,10 @@
+use serde_derive::{Deserialize, Serialize};
 use std::iter::repeat_with;
 
 use crate::leg_env::LegEnv;
 use crate::neuron::{make_rand_neuron, Neuron};
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct Leg(pub Vec<Neuron>);
 
 pub fn make_rand_leg(num_neurons: usize) -> Leg {
@@ -121,9 +122,9 @@ pub fn select(num_select: usize, legs: &Vec<Leg>, fits: &Vec<f32>) -> Vec<Leg> {
                 .collect();
             let prob_list = normed_fits[..normed_fits.len() - 1]
                 .iter()
-                .scan(0.0, |acc, &normed_fit| {
-                    *acc += normed_fit;
-                    Some(*acc)
+                .scan(0.0, |state, &normed_fit| {
+                    *state += normed_fit;
+                    Some(*state)
                 })
                 .collect::<Vec<f32>>();
             let r = fastrand::f32();

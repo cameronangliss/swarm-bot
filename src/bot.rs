@@ -1,15 +1,15 @@
+use serde_derive::{Deserialize, Serialize};
+use std::iter::repeat_with;
+
 use crate::bot_env::BotEnv;
 use crate::leg::{make_rand_leg, Leg};
 use crate::leg_env::LegEnv;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Bot(pub Vec<Leg>);
 
-pub fn _make_rand_bot(num_neurons: usize) -> Bot {
-    let legs = vec![num_neurons; 6]
-        .iter()
-        .map(|&num_neurons| make_rand_leg(num_neurons))
-        .collect();
+pub fn make_rand_bot(num_neurons: usize) -> Bot {
+    let legs = repeat_with(|| make_rand_leg(num_neurons)).take(6).collect();
     Bot(legs)
 }
 

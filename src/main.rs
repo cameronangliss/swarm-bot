@@ -1,8 +1,9 @@
 use fastrand;
+use std::fs;
 use std::io::{stdin, stdout, Write};
 use std::time::Instant;
 
-use swarm_bot::bot_ga::BotParams;
+use swarm_bot::bot_ga::{BotParams, BotRecords};
 use swarm_bot::leg_ga::LegParams;
 
 fn main() {
@@ -25,6 +26,21 @@ fn main() {
 }
 
 fn bot_main() {
+    print!("\nLoad a saved run? (y/n): ");
+    stdout().flush().unwrap();
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    match input.trim() {
+        "y" => bot_load(),
+        "n" => bot_init(),
+        _ => {
+            println!("Invalid input. Try again.");
+            bot_main()
+        }
+    }
+}
+
+fn bot_init() {
     let params = request_bot_params();
     print!("\nInitializing generation 0...");
     stdout().flush().unwrap();
@@ -33,18 +49,64 @@ fn bot_main() {
     let mut records = params.init_bot_records();
     let elapsed = start.elapsed();
     println!("done! Elapsed time: {}s.", elapsed.as_secs());
-    loop {
+    bot_view(&params, &mut records)
+}
+
+fn bot_load() {
+    let params = request_bot_params();
+    print!("\nLoading bot data...");
+    stdout().flush().unwrap();
+    let start = Instant::now();
+    let filepath = format!("runs/{}.txt", params.label());
+    let save_str = fs::read_to_string(filepath).unwrap();
+    let (mut records, seed): (BotRecords, u64) = serde_json::from_str(&save_str).unwrap();
+    fastrand::seed(seed);
+    let elapsed = start.elapsed();
+    println!("done! Elapsed time: {}s.", elapsed.as_secs());
+    bot_view(&params, &mut records)
+}
+
+fn bot_view(params: &BotParams, records: &mut BotRecords) {
+    println!(
+        "\nComputed {} generations. What would you like to do?",
+        records.max_fits.len() - 1
+    );
+    println!("Options:");
+    println!("    maxBot");
+    println!("    run");
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    match input.trim() {
+        "maxBot" => bot_view(params, records),
+        "run" => {
+            print!("What generation to compute up to: ");
+            stdout().flush().unwrap();
+            let mut gen_str = String::new();
+            stdin().read_line(&mut gen_str).unwrap();
+            bot_run(gen_str.trim().parse().unwrap(), params, records)
+        }
+        _ => {
+            println!("Invalid input. Try again.");
+            bot_view(params, records)
+        }
+    }
+}
+
+fn bot_run(gens: usize, params: &BotParams, records: &mut BotRecords) {
+    while records.best_fits.len() < gens {
         print!(
             "Computing up to {}th generation...",
             records.best_fits.len() + 999
         );
         stdout().flush().unwrap();
         let start = Instant::now();
-        records.compute_bot_ga(&params, 1000);
-        records.plot(&params, "default");
+        records.compute_bot_ga(params, 1000);
+        records.plot(params, "default");
+        records.save(params);
         let elapsed = start.elapsed();
         println!("done! Elapsed time: {}s.", elapsed.as_secs());
     }
+    bot_view(params, records)
 }
 
 fn request_bot_params() -> BotParams {
@@ -61,12 +123,6 @@ fn request_bot_params() -> BotParams {
     let mut input = String::new();
     stdin().read_line(&mut input).unwrap();
     let num_neurons = input.trim().parse().unwrap();
-
-    print!("    init_gens: ");
-    stdout().flush().unwrap();
-    let mut input = String::new();
-    stdin().read_line(&mut input).unwrap();
-    let init_gens = input.trim().parse().unwrap();
 
     print!("    iters: ");
     stdout().flush().unwrap();
@@ -89,7 +145,6 @@ fn request_bot_params() -> BotParams {
     BotParams {
         pop_size,
         num_neurons,
-        init_gens,
         iters,
         mut_rate,
         seed,
