@@ -5,7 +5,7 @@ use crate::bot_env::BotEnv;
 use crate::leg::{make_rand_leg, Leg};
 use crate::leg_env::LegEnv;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Bot(pub Vec<Leg>);
 
 pub fn make_rand_bot(num_neurons: usize) -> Bot {

@@ -72,12 +72,15 @@ fn bot_view(params: &BotParams, records: &mut BotRecords) {
         records.max_fits.len() - 1
     );
     println!("Options:");
-    println!("    maxBot");
+    println!("    maxbot");
     println!("    run");
     let mut input = String::new();
     stdin().read_line(&mut input).unwrap();
     match input.trim() {
-        "maxBot" => bot_view(params, records),
+        "maxbot" => {
+            println!("{:?}", records.max_bots.iter().last().unwrap());
+            bot_view(params, records)
+        }
         "run" => {
             print!("What generation to compute up to: ");
             stdout().flush().unwrap();
