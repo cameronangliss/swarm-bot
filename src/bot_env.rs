@@ -29,14 +29,6 @@ impl BotEnv {
 }
 
 fn get_leg_effects(leg_velocities_rel_to_bot: &Vec<i16>, leg_heights: &Vec<i16>) -> (f32, f32) {
-    let left_leg_velocities: Vec<i16> = vec![0, 2, 4]
-        .iter()
-        .map(|&n| leg_velocities_rel_to_bot[n])
-        .collect();
-    let right_leg_velocities: Vec<i16> = vec![1, 3, 5]
-        .iter()
-        .map(|&n| leg_velocities_rel_to_bot[n])
-        .collect();
     let leg_effectfulness_scores: Vec<f32> = leg_heights
         .iter()
         .map(|&height| {
@@ -48,13 +40,16 @@ fn get_leg_effects(leg_velocities_rel_to_bot: &Vec<i16>, leg_heights: &Vec<i16>)
             }
         })
         .collect();
-    let left_scores: Vec<f32> = vec![0, 2, 4]
+    let left_scores: Vec<f32> = leg_effectfulness_scores
         .iter()
-        .map(|&n| leg_effectfulness_scores[n])
+        .step_by(2)
+        .map(|&score| score)
         .collect();
-    let right_scores: Vec<f32> = vec![1, 3, 5]
+    let right_scores: Vec<f32> = leg_effectfulness_scores
         .iter()
-        .map(|&n| leg_effectfulness_scores[n])
+        .skip(1)
+        .step_by(2)
+        .map(|&score| score)
         .collect();
     let left_denom: f32 = left_scores.iter().sum();
     let right_denom: f32 = right_scores.iter().sum();
@@ -78,20 +73,23 @@ fn get_leg_effects(leg_velocities_rel_to_bot: &Vec<i16>, leg_heights: &Vec<i16>)
             }
         })
         .collect();
-    let left_thrust = left_leg_velocities.iter().zip(left_coeffs.iter()).fold(
-        0.0,
-        |mut acc, (&velocity, &coeff)| {
+    let left_thrust = leg_velocities_rel_to_bot
+        .iter()
+        .step_by(2)
+        .zip(left_coeffs.iter())
+        .fold(0.0, |mut acc, (&velocity, &coeff)| {
             acc += velocity as f32 * coeff;
             acc
-        },
-    );
-    let right_thrust = right_leg_velocities.iter().zip(right_coeffs.iter()).fold(
-        0.0,
-        |mut acc, (&velocity, &coeff)| {
+        });
+    let right_thrust = leg_velocities_rel_to_bot
+        .iter()
+        .skip(1)
+        .step_by(2)
+        .zip(right_coeffs.iter())
+        .fold(0.0, |mut acc, (&velocity, &coeff)| {
             acc += velocity as f32 * coeff;
             acc
-        },
-    );
+        });
     let thrust = (left_thrust + right_thrust) / 2.0;
     let deg_turn = (right_thrust - left_thrust) / BOT_WIDTH;
     (thrust, deg_turn)
