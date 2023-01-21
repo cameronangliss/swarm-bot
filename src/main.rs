@@ -74,6 +74,7 @@ fn bot_view(params: &BotParams, records: &mut BotRecords) {
     println!("Options:");
     println!("    maxbot");
     println!("    run");
+    println!("    back");
     let mut input = String::new();
     stdin().read_line(&mut input).unwrap();
     match input.trim() {
@@ -88,6 +89,7 @@ fn bot_view(params: &BotParams, records: &mut BotRecords) {
             stdin().read_line(&mut gen_str).unwrap();
             bot_run(gen_str.trim().parse().unwrap(), params, records)
         }
+        "back" => main(),
         _ => {
             println!("Invalid input. Try again.");
             bot_view(params, records)
