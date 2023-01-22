@@ -143,7 +143,7 @@ impl BotRecords {
             self.max_fits, self.best_fits, self.avg_fits, position_lists, bot_path
         );
         fs::write("datafile.txt", data).unwrap();
-        Command::new("python")
+        Command::new("python3")
             .args([
                 "plot_bot_records.py",
                 &params.label(),

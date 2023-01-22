@@ -88,7 +88,7 @@ impl LegRecords {
         let positions = vec![xs, ys];
         let data = format!("{:?}\n{:?}\n{:?}", self.best_fits, self.avg_fits, positions);
         fs::write("datafile.txt", data).unwrap();
-        Command::new("python")
+        Command::new("python3")
             .args([
                 "plot_leg_records.py",
                 &params.label(),
