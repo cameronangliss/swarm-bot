@@ -84,7 +84,7 @@ impl LegRecords {
             input.parse::<usize>().unwrap() + 1
         };
         let leg = self.best_legs.iter().last().unwrap();
-        let (xs, ys): (Vec<i16>, Vec<i16>) = leg.test(params.iters).iter().map(|pos| *pos).unzip();
+        let (xs, ys): (Vec<i16>, Vec<i16>) = leg.test(params.iters).iter().copied().unzip();
         let positions = vec![xs, ys];
         let data = format!("{:?}\n{:?}\n{:?}", self.best_fits, self.avg_fits, positions);
         fs::write("datafile.txt", data).unwrap();
@@ -100,7 +100,7 @@ impl LegRecords {
     }
 }
 
-pub fn evolve_legs(legs: &Vec<Leg>, fits: &Vec<f32>, params: &LegParams) -> Vec<Leg> {
+pub fn evolve_legs(legs: &Vec<Leg>, fits: &[f32], params: &LegParams) -> Vec<Leg> {
     let max_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
     let elite_index = fits.iter().position(|&fit| fit == max_fit).unwrap();
     let elite_leg = legs[elite_index].clone();
@@ -112,7 +112,7 @@ pub fn evolve_legs(legs: &Vec<Leg>, fits: &Vec<f32>, params: &LegParams) -> Vec<
     child_legs
 }
 
-fn create_leg_child(legs: &Vec<Leg>, fits: &Vec<f32>, mut_rate: f32) -> Leg {
+fn create_leg_child(legs: &Vec<Leg>, fits: &[f32], mut_rate: f32) -> Leg {
     let parents = select(2, legs, fits);
     let chrom1 = LegChrom::from(&parents[0]);
     let chrom2 = LegChrom::from(&parents[1]);

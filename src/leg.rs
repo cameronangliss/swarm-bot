@@ -63,11 +63,7 @@ impl Leg {
         [out_accums, hid_accums].concat()
     }
 
-    pub fn accumulate_for_bot(
-        &self,
-        sens_value_lists: &Vec<[i16; 3]>,
-        leg_index: usize,
-    ) -> Vec<i16> {
+    pub fn accumulate_for_bot(&self, sens_value_lists: &[[i16; 3]], leg_index: usize) -> Vec<i16> {
         let values = self.0.iter().map(|neuron| neuron.value).collect();
         let out_sens_values = sens_value_lists[leg_index].to_vec();
         let out_accums: Vec<i16> = self
@@ -87,7 +83,7 @@ impl Leg {
         [out_accums, hid_accums].concat()
     }
 
-    pub fn activate(&self, accs: &Vec<i16>) -> Vec<i16> {
+    pub fn activate(&self, accs: &[i16]) -> Vec<i16> {
         self.0
             .iter()
             .zip(accs.iter())
@@ -95,7 +91,7 @@ impl Leg {
             .collect()
     }
 
-    pub fn update_values(&mut self, values: &Vec<i16>) {
+    pub fn update_values(&mut self, values: &[i16]) {
         self.0
             .iter_mut()
             .zip(values.iter())
@@ -103,14 +99,14 @@ impl Leg {
     }
 }
 
-pub fn select(num_select: usize, legs: &Vec<Leg>, fits: &Vec<f32>) -> Vec<Leg> {
-    if num_select <= 0 {
+pub fn select(num_select: usize, legs: &Vec<Leg>, fits: &[f32]) -> Vec<Leg> {
+    if num_select == 0 {
         vec![]
     } else if num_select >= legs.len() {
         legs.clone()
     } else {
         let mut legs_left = legs.clone();
-        let mut fits_left = fits.clone();
+        let mut fits_left = fits.to_owned();
         let mut selected_legs = vec![];
         for _ in 0..num_select {
             let min_fit = fits_left.iter().min_by(|a, b| a.total_cmp(b)).unwrap();
@@ -128,12 +124,7 @@ pub fn select(num_select: usize, legs: &Vec<Leg>, fits: &Vec<f32>) -> Vec<Leg> {
                 })
                 .collect::<Vec<f32>>();
             let r = fastrand::f32();
-            let index = prob_list
-                .iter()
-                .filter(|prob| **prob < r)
-                .map(|prob| *prob)
-                .collect::<Vec<f32>>()
-                .len();
+            let index = prob_list.iter().filter(|prob| **prob < r).count();
             selected_legs.push(legs_left[index].clone());
             legs_left.remove(index);
             fits_left.remove(index);
@@ -142,7 +133,7 @@ pub fn select(num_select: usize, legs: &Vec<Leg>, fits: &Vec<f32>) -> Vec<Leg> {
     }
 }
 
-fn remove<T>(i: usize, xs: &Vec<T>) -> Vec<T>
+fn remove<T>(i: usize, xs: &[T]) -> Vec<T>
 where
     T: Clone,
 {

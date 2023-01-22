@@ -28,7 +28,7 @@ impl BotEnv {
     }
 }
 
-fn get_leg_effects(leg_velocities_rel_to_bot: &Vec<i16>, leg_heights: &Vec<i16>) -> (f32, f32) {
+fn get_leg_effects(leg_velocities_rel_to_bot: &[i16], leg_heights: &[i16]) -> (f32, f32) {
     let leg_effectfulness_scores: Vec<f32> = leg_heights
         .iter()
         .map(|&height| {
@@ -43,13 +43,13 @@ fn get_leg_effects(leg_velocities_rel_to_bot: &Vec<i16>, leg_heights: &Vec<i16>)
     let left_scores: Vec<f32> = leg_effectfulness_scores
         .iter()
         .step_by(2)
-        .map(|&score| score)
+        .copied()
         .collect();
     let right_scores: Vec<f32> = leg_effectfulness_scores
         .iter()
         .skip(1)
         .step_by(2)
-        .map(|&score| score)
+        .copied()
         .collect();
     let left_denom: f32 = left_scores.iter().sum();
     let right_denom: f32 = right_scores.iter().sum();
@@ -95,18 +95,13 @@ fn get_leg_effects(leg_velocities_rel_to_bot: &Vec<i16>, leg_heights: &Vec<i16>)
     (thrust, deg_turn)
 }
 
-fn get_drag_factor(leg_heights: &Vec<i16>) -> f32 {
+fn get_drag_factor(leg_heights: &[i16]) -> f32 {
     let on_ground = |ns: Vec<usize>| ns.iter().map(|&n| leg_heights[n]).all(|height| height == 0);
     let tri = on_ground(vec![0, 3, 4]) || on_ground(vec![1, 2, 5]);
     let rect = on_ground(vec![0, 1, 4, 5]);
     let par = on_ground(vec![0, 2, 3, 5]) || on_ground(vec![1, 2, 3, 4]);
     let static_stable = tri || rect || par;
-    let num_on_ground = leg_heights
-        .iter()
-        .filter(|height| **height == 0)
-        .map(|&height| height)
-        .collect::<Vec<i16>>()
-        .len();
+    let num_on_ground = leg_heights.iter().filter(|height| **height == 0).count();
     let part_stable = on_ground(vec![0, 5]) || on_ground(vec![1, 4]) || on_ground(vec![2, 3]);
     if static_stable {
         1.0

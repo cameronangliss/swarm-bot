@@ -1,4 +1,3 @@
-use fastrand;
 use std::fs;
 use std::io::{stdin, stdout, Write};
 use std::time::Instant;

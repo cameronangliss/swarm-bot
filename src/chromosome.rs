@@ -35,22 +35,14 @@ impl LegChrom {
 
 impl From<&LegChrom> for Leg {
     fn from(leg_chrom: &LegChrom) -> Leg {
-        let neurons = leg_chrom
-            .0
-            .iter()
-            .map(|neuron_chrom| Neuron::from(neuron_chrom))
-            .collect();
+        let neurons = leg_chrom.0.iter().map(Neuron::from).collect();
         Leg(neurons)
     }
 }
 
 impl From<&Leg> for LegChrom {
     fn from(leg: &Leg) -> LegChrom {
-        let neuron_chroms = leg
-            .0
-            .iter()
-            .map(|neuron| NeuronChrom::from(neuron))
-            .collect();
+        let neuron_chroms = leg.0.iter().map(NeuronChrom::from).collect();
         LegChrom(neuron_chroms)
     }
 }
@@ -152,12 +144,12 @@ impl From<&NeuronChrom> for Neuron {
         let weights = nrn_chrom
             .3
             .iter()
-            .map(|weight_bin| from_signed_bin(&weight_bin))
+            .map(|weight_bin| from_signed_bin(weight_bin))
             .collect();
         let sens_weights = nrn_chrom
             .4
             .iter()
-            .map(|sens_weight_bin| from_signed_bin(&sens_weight_bin))
+            .map(|sens_weight_bin| from_signed_bin(sens_weight_bin))
             .collect();
         Neuron {
             value,

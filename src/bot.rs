@@ -35,7 +35,7 @@ impl Bot {
         position_lists
     }
 
-    fn step(&mut self, leg_envs: &mut Vec<LegEnv>) {
+    fn step(&mut self, leg_envs: &mut [LegEnv]) {
         let sens_value_lists: Vec<[i16; 3]> = leg_envs.iter().map(|env| env.sens_values).collect();
         let accum_lists = self.accumulate(&sens_value_lists);
         let new_value_lists = self.activate(&accum_lists);
@@ -46,7 +46,7 @@ impl Bot {
             .for_each(|(env, values)| env.act(values[0] as usize, values[1] as usize));
     }
 
-    fn accumulate(&self, sens_value_lists: &Vec<[i16; 3]>) -> Vec<Vec<i16>> {
+    fn accumulate(&self, sens_value_lists: &[[i16; 3]]) -> Vec<Vec<i16>> {
         self.0
             .iter()
             .enumerate()
@@ -54,7 +54,7 @@ impl Bot {
             .collect()
     }
 
-    fn activate(&self, accum_lists: &Vec<Vec<i16>>) -> Vec<Vec<i16>> {
+    fn activate(&self, accum_lists: &[Vec<i16>]) -> Vec<Vec<i16>> {
         self.0
             .iter()
             .zip(accum_lists.iter())
@@ -62,10 +62,10 @@ impl Bot {
             .collect()
     }
 
-    fn update_values(&mut self, value_lists: &Vec<Vec<i16>>) {
+    fn update_values(&mut self, value_lists: &[Vec<i16>]) {
         self.0
             .iter_mut()
             .zip(value_lists.iter())
-            .for_each(|(leg, values)| leg.update_values(&values));
+            .for_each(|(leg, values)| leg.update_values(values));
     }
 }

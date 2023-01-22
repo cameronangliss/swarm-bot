@@ -84,7 +84,7 @@ impl BotRecords {
                 .leg_lists
                 .iter()
                 .zip(self.fit_lists.iter())
-                .map(|(legs, fits)| evolve_legs(&legs, &fits, &LegParams::from(params)))
+                .map(|(legs, fits)| evolve_legs(legs, fits, &LegParams::from(params)))
                 .collect();
             let bots: Vec<Bot> = transpose(&self.leg_lists)
                 .iter()
@@ -132,11 +132,11 @@ impl BotRecords {
         let position_lists: Vec<Vec<Vec<i16>>> = transpose(&bot.test(params.iters))
             .iter()
             .map(|positions| {
-                let (xs, ys) = positions.iter().map(|pos| *pos).unzip();
+                let (xs, ys) = positions.iter().copied().unzip();
                 vec![xs, ys]
             })
             .collect();
-        let (xs, ys): (Vec<f32>, Vec<f32>) = bot.path(params.iters).iter().map(|pos| *pos).unzip();
+        let (xs, ys): (Vec<f32>, Vec<f32>) = bot.path(params.iters).iter().copied().unzip();
         let bot_path = vec![xs, ys];
         let data = format!(
             "{:?}\n{:?}\n{:?}\n{:?}\n{:?}",
@@ -172,9 +172,9 @@ where
     for _ in 0..n {
         trans_matrix.push(vec![T::default(); m])
     }
-    for i in 0..matrix.len() {
-        for j in 0..matrix[i].len() {
-            trans_matrix[j][i] = matrix[i][j].clone();
+    for (i, row) in matrix.iter().enumerate() {
+        for (j, item) in row.iter().enumerate() {
+            trans_matrix[j][i] = item.clone();
         }
     }
     trans_matrix
