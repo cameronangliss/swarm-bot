@@ -24,11 +24,11 @@ def plotFits():
     xs = list(range(len(maxFits)))
     maxPlot = plt.plot(xs, maxFits, color="black",
                        linewidth=1.2, label="MaxFits")
-    bestPlot = plt.plot(
-        xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
+    bestPlot = plt.scatter(
+        xs, bestFits, color="limegreen", s=1, label="BestFits"
     )
-    avgPlot = plt.plot(xs, avgFits, color="dodgerblue",
-                       linewidth=1.2, label="AvgFits")
+    avgPlot = plt.scatter(xs, avgFits, color="dodgerblue",
+                          s=1, label="AvgFits")
     plt.xlabel("Generation")
     plt.ylabel("Fitness (mm)")
     plt.title("Bot Evolution\nBest Fitness = " +
