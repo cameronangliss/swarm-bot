@@ -7,6 +7,8 @@ fn leg_ga() {
         num_neurons: 5,
         iters: 50,
         mut_rate: 1e-3,
+        min_std_dev: 25.0,
+        sample_size: 1000,
         seed: 1,
     };
     let mut records = params.init_bot_records();

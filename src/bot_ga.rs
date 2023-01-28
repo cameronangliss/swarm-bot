@@ -1,4 +1,5 @@
 use fastrand;
+use ndarray::arr1;
 use serde_derive::{Deserialize, Serialize};
 use serde_json;
 use std::fs;
@@ -15,14 +16,22 @@ pub struct BotParams {
     pub num_neurons: usize,
     pub iters: usize,
     pub mut_rate: f32,
+    pub min_std_dev: f32,
+    pub sample_size: usize,
     pub seed: u64,
 }
 
 impl BotParams {
     pub fn label(&self) -> String {
         format!(
-            "Bot_{}_{}_{}_{:e}_{}",
-            self.pop_size, self.num_neurons, self.iters, self.mut_rate, self.seed
+            "Bot_{}_{}_{}_{:e}_{}_{}_{}",
+            self.pop_size,
+            self.num_neurons,
+            self.iters,
+            self.mut_rate,
+            self.min_std_dev,
+            self.sample_size,
+            self.seed
         )
     }
 
@@ -50,6 +59,7 @@ impl BotParams {
             avg_fits: vec![avg_fit],
             leg_lists,
             fit_lists: vec![fits; 6],
+            mut_rate: self.mut_rate,
         }
     }
 }
@@ -75,16 +85,21 @@ pub struct BotRecords {
     pub avg_fits: Vec<f32>,
     pub leg_lists: Vec<Vec<Leg>>,
     fit_lists: Vec<Vec<f32>>,
+    pub mut_rate: f32,
 }
 
 impl BotRecords {
     pub fn compute_bot_ga(&mut self, params: &BotParams, gens: usize) {
         for _ in 0..gens {
+            let leg_params = LegParams::from(&BotParams {
+                mut_rate: self.mut_rate,
+                ..*params
+            });
             self.leg_lists = self
                 .leg_lists
                 .iter()
                 .zip(self.fit_lists.iter())
-                .map(|(legs, fits)| evolve_legs(legs, fits, &LegParams::from(params)))
+                .map(|(legs, fits)| evolve_legs(legs, fits, &leg_params))
                 .collect();
             let bots: Vec<Bot> = transpose(&self.leg_lists)
                 .iter()
@@ -105,6 +120,25 @@ impl BotRecords {
             }
             let avg_fit = fits.iter().sum::<f32>() / fits.len() as f32;
             self.avg_fits.push(avg_fit);
+            if self.best_fits.len() % params.sample_size == 0 {
+                self.update_mut_rate(params);
+            }
+        }
+    }
+
+    fn update_mut_rate(&mut self, params: &BotParams) {
+        let sample: Vec<f32> = self
+            .best_fits
+            .iter()
+            .rev()
+            .take(params.sample_size)
+            .copied()
+            .collect();
+        let std_dev = arr1(&sample).std(0.0);
+        if std_dev >= params.min_std_dev {
+            self.mut_rate = params.mut_rate;
+        } else {
+            self.mut_rate *= 2.0;
         }
     }
 

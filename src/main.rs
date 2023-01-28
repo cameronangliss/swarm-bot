@@ -61,7 +61,11 @@ fn bot_load() {
     let (mut records, seed): (BotRecords, u64) = serde_json::from_str(&save_str).unwrap();
     fastrand::seed(seed);
     let elapsed = start.elapsed();
-    println!("done! Elapsed time: {}s.", elapsed.as_secs());
+    println!(
+        "done! Elapsed time: {}s, mut_rate: {}",
+        elapsed.as_secs(),
+        records.mut_rate
+    );
     bot_view(&params, &mut records)
 }
 
@@ -108,7 +112,11 @@ fn bot_run(gens: usize, params: &BotParams, records: &mut BotRecords) {
         records.plot(params, "default");
         records.save(params);
         let elapsed = start.elapsed();
-        println!("done! Elapsed time: {}s.", elapsed.as_secs());
+        println!(
+            "done! Elapsed time: {}s, mut_rate: {}",
+            elapsed.as_secs(),
+            records.mut_rate
+        );
     }
     bot_view(params, records)
 }
@@ -140,6 +148,18 @@ fn request_bot_params() -> BotParams {
     stdin().read_line(&mut input).unwrap();
     let mut_rate = input.trim().parse().unwrap();
 
+    print!("    min_std_dev: ");
+    stdout().flush().unwrap();
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    let min_std_dev = input.trim().parse().unwrap();
+
+    print!("    sample_size: ");
+    stdout().flush().unwrap();
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    let sample_size = input.trim().parse().unwrap();
+
     print!("    seed: ");
     stdout().flush().unwrap();
     let mut input = String::new();
@@ -151,6 +171,8 @@ fn request_bot_params() -> BotParams {
         num_neurons,
         iters,
         mut_rate,
+        min_std_dev,
+        sample_size,
         seed,
     }
 }
