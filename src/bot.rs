@@ -43,7 +43,7 @@ impl Bot {
         leg_envs
             .iter_mut()
             .zip(new_value_lists.iter())
-            .for_each(|(env, values)| env.act(values[0] as usize, values[1] as usize));
+            .for_each(|(env, values)| env.act(values[0], values[1]));
     }
 
     fn accumulate(&self, sens_value_lists: &[[i16; 3]]) -> Vec<Vec<i16>> {
@@ -54,7 +54,7 @@ impl Bot {
             .collect()
     }
 
-    fn activate(&self, accum_lists: &[Vec<i16>]) -> Vec<Vec<i16>> {
+    fn activate(&self, accum_lists: &[Vec<i16>]) -> Vec<Vec<usize>> {
         self.0
             .iter()
             .zip(accum_lists.iter())
@@ -62,7 +62,7 @@ impl Bot {
             .collect()
     }
 
-    fn update_values(&mut self, value_lists: &[Vec<i16>]) {
+    fn update_values(&mut self, value_lists: &[Vec<usize>]) {
         self.0
             .iter_mut()
             .zip(value_lists.iter())

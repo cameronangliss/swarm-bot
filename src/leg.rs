@@ -45,34 +45,34 @@ impl Leg {
         let accums = self.accumulate_for_leg(&env.sens_values);
         let activs = self.activate(&accums);
         self.update_values(&activs);
-        env.act(activs[0] as usize, activs[1] as usize);
+        env.act(activs[0], activs[1]);
     }
 
     fn accumulate_for_leg(&self, sens_values: &[i16; 3]) -> Vec<i16> {
-        let values = self.0.iter().map(|neuron| neuron.value).collect();
+        let values: Vec<usize> = self.0.iter().map(|neuron| neuron.value).collect();
         let out_accums: Vec<i16> = self
             .0
             .iter()
             .take(2)
-            .map(|neuron| neuron.accumulate(&values, &sens_values.to_vec()))
+            .map(|neuron| neuron.accumulate(&values, sens_values))
             .collect();
         let hid_accums = self.0[2..]
             .iter()
-            .map(|neuron| neuron.accumulate(&values, &vec![]))
+            .map(|neuron| neuron.accumulate(&values, &[]))
             .collect();
         [out_accums, hid_accums].concat()
     }
 
     pub fn accumulate_for_bot(&self, sens_value_lists: &[[i16; 3]], leg_index: usize) -> Vec<i16> {
-        let values = self.0.iter().map(|neuron| neuron.value).collect();
-        let out_sens_values = sens_value_lists[leg_index].to_vec();
+        let values: Vec<usize> = self.0.iter().map(|neuron| neuron.value).collect();
+        let out_sens_values = sens_value_lists[leg_index];
         let out_accums: Vec<i16> = self
             .0
             .iter()
             .take(2)
             .map(|neuron| neuron.accumulate(&values, &out_sens_values))
             .collect();
-        let hid_sens_values = remove(leg_index, sens_value_lists)
+        let hid_sens_values: Vec<i16> = remove(leg_index, sens_value_lists)
             .iter()
             .map(|sens_values| sens_values[2])
             .collect();
@@ -83,7 +83,7 @@ impl Leg {
         [out_accums, hid_accums].concat()
     }
 
-    pub fn activate(&self, accs: &[i16]) -> Vec<i16> {
+    pub fn activate(&self, accs: &[i16]) -> Vec<usize> {
         self.0
             .iter()
             .zip(accs.iter())
@@ -91,7 +91,7 @@ impl Leg {
             .collect()
     }
 
-    pub fn update_values(&mut self, values: &[i16]) {
+    pub fn update_values(&mut self, values: &[usize]) {
         self.0
             .iter_mut()
             .zip(values.iter())
