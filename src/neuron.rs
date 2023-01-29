@@ -44,7 +44,7 @@ impl Neuron {
     }
     pub fn activate(&self, acc: i16) -> usize {
         if self.stretch == 0 {
-            if acc < self.trans {
+            if acc > self.trans {
                 15
             } else {
                 0
