@@ -138,7 +138,7 @@ fn mutate_bin(bin: &str, mut_rate: f32) -> String {
 
 impl From<&NeuronChrom> for Neuron {
     fn from(nrn_chrom: &NeuronChrom) -> Neuron {
-        let value = usize::from_str_radix(&nrn_chrom.0, 2).unwrap();
+        let value = i16::from_str_radix(&nrn_chrom.0, 2).unwrap();
         let trans = from_signed_bin(&nrn_chrom.1);
         let stretch = from_signed_bin(&nrn_chrom.2);
         let weights = nrn_chrom
