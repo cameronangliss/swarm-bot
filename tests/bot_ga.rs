@@ -5,6 +5,7 @@ fn leg_ga() {
     let params = BotParams {
         pop_size: 20,
         num_neurons: 5,
+        init_gens: 10,
         iters: 50,
         mut_rate: 1e-3,
         min_std_dev: 25.0,

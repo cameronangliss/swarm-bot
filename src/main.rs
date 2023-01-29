@@ -136,6 +136,12 @@ fn request_bot_params() -> BotParams {
     stdin().read_line(&mut input).unwrap();
     let num_neurons = input.trim().parse().unwrap();
 
+    print!("    init_gens: ");
+    stdout().flush().unwrap();
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    let init_gens = input.trim().parse().unwrap();
+
     print!("    iters: ");
     stdout().flush().unwrap();
     let mut input = String::new();
@@ -169,6 +175,7 @@ fn request_bot_params() -> BotParams {
     BotParams {
         pop_size,
         num_neurons,
+        init_gens,
         iters,
         mut_rate,
         min_std_dev,

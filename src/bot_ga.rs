@@ -7,13 +7,14 @@ use std::io::{stdin, stdout, Write};
 use std::iter::repeat_with;
 use std::process::Command;
 
-use crate::bot::{make_rand_bot, Bot};
+use crate::bot::Bot;
 use crate::leg::Leg;
 use crate::leg_ga::{evolve_legs, LegParams};
 
 pub struct BotParams {
     pub pop_size: usize,
     pub num_neurons: usize,
+    pub init_gens: usize,
     pub iters: usize,
     pub mut_rate: f32,
     pub min_std_dev: f32,
@@ -24,9 +25,10 @@ pub struct BotParams {
 impl BotParams {
     pub fn label(&self) -> String {
         format!(
-            "Bot_{}_{}_{}_{:e}_{}_{}_{}",
+            "Bot_{}_{}_{}_{}_{:e}_{}_{}_{}",
             self.pop_size,
             self.num_neurons,
+            self.init_gens,
             self.iters,
             self.mut_rate,
             self.min_std_dev,
@@ -42,10 +44,21 @@ impl BotParams {
     }
 
     pub fn init_bot_records(&self) -> BotRecords {
-        let bots: Vec<Bot> = repeat_with(|| make_rand_bot(self.num_neurons))
-            .take(self.pop_size)
+        let leg_params = LegParams {
+            mut_rate: 1e-2,
+            ..LegParams::from(self)
+        };
+        let leg_lists = repeat_with(|| {
+            let mut leg_records = leg_params.init_leg_records();
+            leg_records.compute_leg_ga(&leg_params, self.init_gens);
+            leg_records.legs
+        })
+        .take(6)
+        .collect();
+        let bots: Vec<Bot> = transpose(&leg_lists)
+            .iter()
+            .map(|legs| Bot(legs.clone()))
             .collect();
-        let leg_lists = transpose(&bots.iter().map(|bot| bot.0.clone()).collect());
         let fits: Vec<f32> = bots.iter().map(|bot| bot.fit(self.iters)).collect();
         let best_fit = *fits.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
         let best_index = fits.iter().position(|&fit| fit == best_fit).unwrap();
