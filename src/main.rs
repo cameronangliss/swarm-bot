@@ -77,6 +77,8 @@ fn bot_view(params: &BotParams, records: &mut BotRecords) {
     println!("Options:");
     println!("    maxbot");
     println!("    run");
+    println!("    plotEvo");
+    println!("    plotMax");
     println!("    back");
     let mut input = String::new();
     stdin().read_line(&mut input).unwrap();
@@ -92,6 +94,8 @@ fn bot_view(params: &BotParams, records: &mut BotRecords) {
             stdin().read_line(&mut gen_str).unwrap();
             bot_run(gen_str.trim().parse().unwrap(), params, records)
         }
+        "plotEvo" => records.plot(params, "evo"),
+        "plotMax" => records.plot(params, "max"),
         "back" => main(),
         _ => {
             println!("Invalid input. Try again.");
