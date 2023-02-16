@@ -1,10 +1,10 @@
+import sys
 import matplotlib.pyplot as plt
 import os
 
 os.environ["R_HOME"] = "C:/Program Files/R/R-4.2.0"
-os.environ["PATH"] = "C:/Program Files/R/R-4.2.0/bin/x64" + ";" + os.environ["PATH"]
-import rpy2.robjects as robjects
-import sys
+os.environ["PATH"] = "C:/Program Files/R/R-4.2.0/bin/x64" + \
+    ";" + os.environ["PATH"]
 
 
 def mkPlotFiles():
@@ -22,17 +22,21 @@ def mkPlotFiles():
 def plotFits():
     xs = list(range(len(maxFits)))
     if recordType == "smooth":
-        maxPlot = plt.plot(xs, maxFits, color="black", linewidth=1.2, label="MaxFits")
+        maxPlot = plt.plot(xs, maxFits, color="black",
+                           linewidth=1.2, label="MaxFits")
         bestPlot = plt.plot(
             xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
         )
         avgPlot = plt.plot(
             xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
         )
-        refPlot = plt.plot(xs, refFits, color="crimson", linewidth=1.2, label="RefFits")
+        refPlot = plt.plot(xs, refFits, color="crimson",
+                           linewidth=1.2, label="RefFits")
     elif recordType == "raw" or recordType == "default":
-        refPlot = plt.plot(xs, refFits, color="crimson", linewidth=1.2, label="RefFits")
-        maxPlot = plt.plot(xs, maxFits, color="black", linewidth=1.2, label="MaxFits")
+        refPlot = plt.plot(xs, refFits, color="crimson",
+                           linewidth=1.2, label="RefFits")
+        maxPlot = plt.plot(xs, maxFits, color="black",
+                           linewidth=1.2, label="MaxFits")
         bestPlot = plt.plot(
             xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
         )
@@ -41,7 +45,8 @@ def plotFits():
         )
     plt.xlabel("Generation")
     plt.ylabel("Fitness (mm)")
-    plt.title("Bot Evolution\nBest Fitness = " + str(round(maxFits[-1])) + " mm")
+    plt.title("Bot Evolution\nBest Fitness = " +
+              str(round(maxFits[-1])) + " mm")
     plt.legend()
     if recordType == "default":
         endLabel = "_currentBotEvolution.png"
@@ -49,7 +54,7 @@ def plotFits():
         endLabel = "_gen" + botGen + "rawBotEvolution.png"
     elif recordType == "smooth":
         endLabel = "_gen" + botGen + "smoothBotEvolution.png"
-    fileName = ".stack-work\\plots\\" + name + endLabel
+    fileName = ".stack-work/plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
     plt.close("all")
@@ -80,7 +85,7 @@ def plotLegMotions():
         endLabel = "_gen" + botGen + "refBotMotions.png"
     elif recordType == "max":
         endLabel = "_gen" + botGen + "maxBotMotions.png"
-    fileName = ".stack-work\\plots\\" + name + endLabel
+    fileName = ".stack-work/plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
     plt.close("all")
@@ -106,7 +111,7 @@ def plotBotPath():
         endLabel = "_gen" + botGen + "refBotPath.png"
     elif recordType == "max":
         endLabel = "_gen" + botGen + "maxBotPath.png"
-    fileName = ".stack-work\\plots\\" + name + endLabel
+    fileName = ".stack-work/plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
     plt.close("all")
@@ -120,20 +125,20 @@ def interpLstStr(lstStr):
         substr = lstStr[posStart:]
         posEnd = posStart + findEndBracket(substr)
         if posStart == 1 and posEnd + 2 == len(lstStr):
-            return [interpLstStr(lstStr[posStart : posEnd + 1])]
+            return [interpLstStr(lstStr[posStart: posEnd + 1])]
         elif posStart == 1:
-            return [interpLstStr(lstStr[posStart : posEnd + 1])] + interpLstStr(
-                "[" + lstStr[posEnd + 2 :]
+            return [interpLstStr(lstStr[posStart: posEnd + 1])] + interpLstStr(
+                "[" + lstStr[posEnd + 2:]
             )
         elif posEnd + 2 == len(lstStr):
             return interpLstStr(lstStr[: posStart - 1] + "]") + [
-                interpLstStr(lstStr[posStart : posEnd + 1])
+                interpLstStr(lstStr[posStart: posEnd + 1])
             ]
         else:
             return (
                 interpLstStr(lstStr[: posStart - 1] + "]")
-                + [interpLstStr(lstStr[posStart : posEnd + 1])]
-                + interpLstStr("[" + lstStr[posEnd + 2 :])
+                + [interpLstStr(lstStr[posStart: posEnd + 1])]
+                + interpLstStr("[" + lstStr[posEnd + 2:])
             )
 
 
@@ -163,7 +168,7 @@ def isFlatLst(lstStr):
 name = sys.argv[1]
 recordType = sys.argv[2]
 botGen = sys.argv[3]
-dataFile = open(".stack-work\\datafile.txt", "r")
+dataFile = open(".stack-work/datafile.txt", "r")
 maxFits = interpLstStr(dataFile.readline()[:-1])
 bestFits = interpLstStr(dataFile.readline()[:-1])
 avgFits = interpLstStr(dataFile.readline()[:-1])
@@ -172,10 +177,12 @@ legMoves = interpLstStr(dataFile.readline()[:-1])
 hexPath = interpLstStr(dataFile.readline())
 if recordType == "default":
     legTitle = (
-        "Current RefBot's Leg Motions\nFitness = " + str(round(refFits[-1])) + " mm"
+        "Current RefBot's Leg Motions\nFitness = " +
+        str(round(refFits[-1])) + " mm"
     )
     pathTitle = (
-        "Current RefBot's Path on Floor\nFitness = " + str(round(refFits[-1])) + " mm"
+        "Current RefBot's Path on Floor\nFitness = " +
+        str(round(refFits[-1])) + " mm"
     )
 elif recordType == "ref":
     legTitle = (
@@ -207,17 +214,4 @@ elif recordType == "max":
         + str(round(maxFits[-1]))
         + " mm"
     )
-if recordType == "smooth":
-    lists = []
-    for lst in [bestFits, avgFits, refFits]:
-        r_smooth_spline = robjects.r["smooth.spline"]
-        r_x = robjects.FloatVector(range(len(lst)))
-        r_y = robjects.FloatVector(lst)
-        kwargs = {"x": r_x, "y": r_y, "lambda": 1e-3}
-        spline = r_smooth_spline(**kwargs)
-        newLst = robjects.r["predict"](spline, r_x).rx2("y")
-        lists += [newLst]
-    bestFits = lists[0]
-    avgFits = lists[1]
-    refFits = lists[2]
 mkPlotFiles()
