@@ -53,7 +53,7 @@ testNet iter net = (poss . snd . testNetr [[15, 0, 15]] numNrns False iter 0 1.0
 
 testNetr :: [[Int]] -> Int -> Bool -> Int -> Int -> Float -> Net -> TestData -> (Net, TestData)
 testNetr _ _ _ 0 _ _ net testData = (net, testData)
-testNetr sLsts numNrns isFromBot iter netIndex power net testData =
+testNetr sLsts numNrns isFromBot iter netIndex rangeFactor net testData =
     let
   -- updating neuron values of selected neural network
         accums           = getNetAccs net netIndex sLsts numNrns isFromBot
@@ -64,8 +64,8 @@ testNetr sLsts numNrns isFromBot iter netIndex power net testData =
         [inputX, inputY] = take 2 activs
         newXMom          = getNextMom inputX (x testData) (xMom testData) xLst
         newYMom          = getNextMom inputY (y testData) (yMom testData) yLst
-        newX             = getNextPos inputX (x testData) newXMom xLst power
-        newY             = getNextPos inputY (y testData) newYMom yLst power
+        newX             = getNextPos inputX (x testData) newXMom xLst rangeFactor
+        newY             = getNextPos inputY (y testData) newYMom yLst rangeFactor
         -- updating sensor data
         newS1            = if newX == head xLst then 15 else 0
         newS2            = if newX == last xLst then 15 else 0
@@ -74,7 +74,7 @@ testNetr sLsts numNrns isFromBot iter netIndex power net testData =
         newSLsts         = replace sLsts netIndex newSLst
         -- updating testData to move to next iteration of leg testing
         newTestData      = TestData newS1 newS2 newS3 newX newY newXMom newYMom (poss testData ++ [(newX, newY)])
-    in  testNetr newSLsts numNrns isFromBot (iter - 1) netIndex power newNet newTestData
+    in  testNetr newSLsts numNrns isFromBot (iter - 1) netIndex rangeFactor newNet newTestData
 
 -- calculates the new accumulation of every neuron in a neural network
 getNetAccs :: Net -> Int -> [[Int]] -> Int -> Bool -> [Int]
@@ -121,10 +121,10 @@ getNextMom input prev mom lst =
 
 -- calculates the new x or y position of a leg after the current iteration
 getNextPos :: Int -> Int -> Int -> [Int] -> Float -> Int
-getNextPos input prev mom lst power =
-    let desired = lst !! input
-        maxCap  = if lst == xLst then 10 else 5
-        cap     = floor $ power * maxCap * 2 ^^ (abs mom - 3)
+getNextPos input prev mom lst rangeFactor =
+    let desired = if lst == xLst then round $ fromIntegral (lst !! input) * rangeFactor else lst !! input
+        maxCap  = if lst == xLst then 10.0 else 5.0
+        cap     = floor $ maxCap * 2 ^^ (abs mom - 3)
         new | mom > 0   = if desired > prev then if desired - prev <= cap then desired else prev + cap else prev
             | mom < 0   = if desired < prev then if prev - desired <= cap then desired else prev - cap else prev
             | otherwise = prev

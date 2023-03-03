@@ -222,14 +222,14 @@ elif recordType == "max":
     )
 elif recordType == "power":
     legTitle = (
-        "MaxBot's Leg Motions with power array "
+        "MaxBot's Leg Motions with range-of-motion array "
         + powerLst
         + "\nFitness = "
         + maxFit
         + " mm"
     )
     pathTitle = (
-        "MaxBot's Path on Floor with power array "
+        "MaxBot's Path on Floor with range-of-motion array "
         + powerLst
         + "\nFitness = "
         + maxFit

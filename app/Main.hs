@@ -183,15 +183,22 @@ recordBotRun params records g recordType = do
         bot          = if recordType == "max" || recordType == "power"
             then last (maxBs truncRecords)
             else last (refBs truncRecords)
-    powerLst <- if recordType == "power"
+    rangeFactors <- if recordType == "power"
         then do
             putStr "\nEnter list of levels of capability of bot legs (ex: [1, 1, 0.5, 0, 0.25, 1]: "
             readLn
         else return $ replicate 6 1.0
-    let fit = getBotFitWhere (BotGA.i params) powerLst bot
-    writeDataFile params truncRecords bot powerLst
-    callCommand $ unwords
-        ["python3 src/PlotBotData.py", show params, recordType, show (numGens - 1), show powerLst, show (round fit)]
+    let fit = getBotFitWhere (BotGA.i params) rangeFactors bot
+    writeDataFile params truncRecords bot rangeFactors
+    callCommand
+        $ unwords
+              [ "python3 src/PlotBotData.py"
+              , show params
+              , recordType
+              , show (numGens - 1)
+              , show rangeFactors
+              , show (round fit)
+              ]
     if recordType == "default"
         then do
             writeFile (".stack-work/runs/" ++ show params ++ ".txt") (show (records, unStdGen g))

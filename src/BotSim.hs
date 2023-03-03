@@ -40,19 +40,15 @@ getBotFits iter = map (getBotFit iter)
 
 -- calculates the fitness of a bot
 getBotFit :: Int -> Bot -> Float
-getBotFit iter bot =
-    let fit       = getBotFitWhere iter (replicate 6 1.0) bot
-        powerLsts = zipWith (\n lst -> replace lst n 0.0) [0 .. 5] (replicate 6 $ replicate 6 1.0)
-        offFits   = map (\powerLst -> getBotFitWhere iter powerLst bot) powerLsts
-    in  mean [fit, mean offFits]
+getBotFit iter = getBotFitWhere iter (replicate 6 1.0)
 
 getBotFitWhere :: Int -> [Float] -> Bot -> Float
-getBotFitWhere iter powerLst = fst . last . getBotPath iter powerLst
+getBotFitWhere iter rangeFactors = fst . last . getBotPath iter rangeFactors
 
 -- transforms the positional data from a bot's simulated run from horiz/vert data of every leg into incremental radial data of the overall robot's position in 2D space
 getBotPath :: Int -> [Float] -> Bot -> [(Float, Float)]
-getBotPath iter powerLst bot = getBotPathr fPosLsts defaultPathData
-    where fPosLsts = (map . map) fromIntTup $ testBot iter powerLst bot
+getBotPath iter rangeFactors bot = getBotPathr fPosLsts defaultPathData
+    where fPosLsts = (map . map) fromIntTup $ testBot iter rangeFactors bot
 
 getBotPathr :: [[(Float, Float)]] -> PathData -> [(Float, Float)]
 getBotPathr ([pos] : posLsts) pathData = path pathData
@@ -104,15 +100,18 @@ getDragFactor ys =
 
 -- simulates a bot for a given number of iterations, and returns the positional data of every leg on the bot throughout the simulation
 testBot :: Int -> [Float] -> Bot -> [[(Int, Int)]]
-testBot iter powerLst bot = testBotr numNrns iter powerLst (getNets bot) (replicate 6 defaultTestData)
+testBot iter rangeFactors bot = testBotr numNrns iter rangeFactors (getNets bot) (replicate 6 defaultTestData)
     where numNrns = (length . getNrns . head . getNets) bot
 
 testBotr :: Int -> Int -> [Float] -> [Net] -> [TestData] -> [[(Int, Int)]]
 testBotr _ 0 _ _ testDataLst = map poss testDataLst
-testBotr numNrns iter powerLst nets testDataLst =
-    let sLsts                     = [ [s1Lst !! n, s2Lst !! n, s3Lst !! n] | n <- [0 .. length testDataLst - 1] ]
-        s3Lst                     = map s3 testDataLst
-        s2Lst                     = map s2 testDataLst
-        s1Lst                     = map s1 testDataLst
-        (newNets, newTestDataLst) = unzip $ zipWith4 (testNetr sLsts numNrns True 1) [0 .. 5] powerLst nets testDataLst
-    in  testBotr numNrns (iter - 1) powerLst newNets newTestDataLst
+testBotr numNrns iter rangeFactors nets testDataLst =
+    let
+        sLsts = [ [s1Lst !! n, s2Lst !! n, s3Lst !! n] | n <- [0 .. length testDataLst - 1] ]
+        s3Lst = map s3 testDataLst
+        s2Lst = map s2 testDataLst
+        s1Lst = map s1 testDataLst
+        (newNets, newTestDataLst) =
+            unzip $ zipWith4 (testNetr sLsts numNrns True 1) [0 .. 5] rangeFactors nets testDataLst
+    in
+        testBotr numNrns (iter - 1) rangeFactors newNets newTestDataLst
