@@ -177,10 +177,10 @@ recordBotRun params records g recordType = do
     let truncRecords = getTruncRecords params records numGens
         bot          = if recordType == "max" then last (maxBs truncRecords) else last (refBs truncRecords)
     writeDataFile params truncRecords bot
-    callCommand $ unwords ["python src\\PlotBotData.py", show params, recordType, show (numGens - 1)]
+    callCommand $ unwords ["python3 src/PlotBotData.py", show params, recordType, show (numGens - 1)]
     if recordType == "default"
         then do
-            writeFile (".stack-work\\runs\\" ++ show params ++ ".txt") (show (records, unStdGen g))
+            writeFile ("runs/" ++ show params ++ ".txt") (show (records, unStdGen g))
             putStrLn "\nPlots drawn, save file overwritten."
         else do
             putStrLn "\nPlots drawn."
@@ -205,7 +205,7 @@ writeDataFile params records bot = do
         unzippedBotPath  = fromTup (unzip botPath)
         refFits          = (concatMap (replicate $ genP params) . init . refFs) records ++ [last $ refFs records]
         fitsTxt          = (unlines . map show) [BotGA.maxFs records, bestFs records, BotGA.avgFs records, refFits]
-    writeFile ".stack-work\\datafile.txt" $ fitsTxt ++ show unzippedLegMoves ++ "\n" ++ show unzippedBotPath
+    writeFile "datafile.txt" $ fitsTxt ++ show unzippedLegMoves ++ "\n" ++ show unzippedBotPath
 
 getBotParams :: Maybe Int -> IO BotParams
 getBotParams currSeed = do
@@ -316,9 +316,9 @@ recordLegRun params records g isFinal = do
         ++ show xLst
         ++ "\n"
         ++ show yLst
-    callCommand $ "python src\\PlotLegData.py " ++ label ++ " " ++ show isFinal
+    callCommand $ "python3 src/PlotLegData.py " ++ label ++ " " ++ show isFinal
     putStrLn "Plot successfully made!"
-    writeFile (".stack-work\\runs\\" ++ label ++ ".txt") (show (records, unStdGen g))
+    writeFile (".stack-work/runs/" ++ label ++ ".txt") (show (records, unStdGen g))
     putStrLn "\nPlots drawn, run saved."
 
 getLegParams :: Maybe Int -> IO NetParams
