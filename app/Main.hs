@@ -219,7 +219,7 @@ writeDataFile params records bot powerLst = do
         unzippedBotPath  = fromTup (unzip botPath)
         refFits          = (concatMap (replicate $ genP params) . init . refFs) records ++ [last $ refFs records]
         fitsTxt          = (unlines . map show) [BotGA.maxFs records, bestFs records, BotGA.avgFs records, refFits]
-    writeFile ".stack-work/datafile.txt" $ fitsTxt ++ show unzippedLegMoves ++ "\n" ++ show unzippedBotPath
+    writeFile "datafile.txt" $ fitsTxt ++ show unzippedLegMoves ++ "\n" ++ show unzippedBotPath
 
 getBotParams :: Maybe Int -> IO BotParams
 getBotParams currSeed = do

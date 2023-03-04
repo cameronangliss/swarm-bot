@@ -54,7 +54,7 @@ def plotFits():
         endLabel = "_gen" + botGen + "rawBotEvolution.png"
     elif recordType == "smooth":
         endLabel = "_gen" + botGen + "smoothBotEvolution.png"
-    fileName = ".stack-work/plots/" + name + endLabel
+    fileName = "plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
     plt.close("all")
@@ -87,7 +87,7 @@ def plotLegMotions():
         endLabel = "_gen" + botGen + "maxBotMotions.png"
     elif recordType == "power":
         endLabel = f"_{powerLst}_reducedBotMotions.png"
-    fileName = ".stack-work/plots/" + name + endLabel
+    fileName = "plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
     plt.close("all")
@@ -115,7 +115,7 @@ def plotBotPath():
         endLabel = "_gen" + botGen + "maxBotPath.png"
     elif recordType == "power":
         endLabel = f"_{powerLst}_reducedBotPath.png"
-    fileName = ".stack-work/plots/" + name + endLabel
+    fileName = "plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
     plt.close("all")
