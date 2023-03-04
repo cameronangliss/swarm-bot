@@ -73,7 +73,7 @@ loadBotMain :: IO ()
 loadBotMain = do
     params <- getBotParams Nothing
     putStr "\nLoading save data..."
-    recordStr <- readFile (".stack-work\\runs\\" ++ show params ++ ".txt")
+    recordStr <- readFile ("runs/" ++ show params ++ ".txt")
     let (records, smgen) = read recordStr :: (BotRecords, SMGen)
         g                = StdGen smgen
         !maxFit          = last (BotGA.maxFs records)

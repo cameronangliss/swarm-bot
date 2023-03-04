@@ -1,5 +1,4 @@
 import sys
-import rpy2.robjects as robjects
 import matplotlib.pyplot as plt
 import os
 
@@ -13,7 +12,7 @@ def mkPlotFiles():
         plotFits()
         plotLegMotions()
         plotBotPath()
-    elif recordType == "raw" or recordType == "smooth":
+    elif recordType == "raw":
         plotFits()
     elif recordType == "ref" or recordType == "max":
         plotLegMotions()
@@ -22,28 +21,16 @@ def mkPlotFiles():
 
 def plotFits():
     xs = list(range(len(maxFits)))
-    if recordType == "smooth":
-        maxPlot = plt.plot(xs, maxFits, color="black",
-                           linewidth=1.2, label="MaxFits")
-        bestPlot = plt.plot(
-            xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
-        )
-        avgPlot = plt.plot(
-            xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
-        )
-        refPlot = plt.plot(xs, refFits, color="crimson",
-                           linewidth=1.2, label="RefFits")
-    elif recordType == "raw" or recordType == "default":
-        refPlot = plt.plot(xs, refFits, color="crimson",
-                           linewidth=1.2, label="RefFits")
-        maxPlot = plt.plot(xs, maxFits, color="black",
-                           linewidth=1.2, label="MaxFits")
-        bestPlot = plt.plot(
-            xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
-        )
-        avgPlot = plt.plot(
-            xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
-        )
+    refPlot = plt.plot(xs, refFits, color="crimson",
+                       linewidth=1.2, label="RefFits")
+    maxPlot = plt.plot(xs, maxFits, color="black",
+                       linewidth=1.2, label="MaxFits")
+    bestPlot = plt.plot(
+        xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
+    )
+    avgPlot = plt.plot(
+        xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
+    )
     plt.xlabel("Generation")
     plt.ylabel("Fitness (mm)")
     plt.title("Bot Evolution\nBest Fitness = " +
@@ -53,8 +40,6 @@ def plotFits():
         endLabel = "_currentBotEvolution.png"
     elif recordType == "raw":
         endLabel = "_gen" + botGen + "rawBotEvolution.png"
-    elif recordType == "smooth":
-        endLabel = "_gen" + botGen + "smoothBotEvolution.png"
     fileName = "plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
@@ -169,7 +154,7 @@ def isFlatLst(lstStr):
 name = sys.argv[1]
 recordType = sys.argv[2]
 botGen = sys.argv[3]
-dataFile = open(".stack-work\\datafile.txt", "r")
+dataFile = open("datafile.txt", "r")
 maxFits = interpLstStr(dataFile.readline()[:-1])
 bestFits = interpLstStr(dataFile.readline()[:-1])
 avgFits = interpLstStr(dataFile.readline()[:-1])
@@ -215,17 +200,4 @@ elif recordType == "max":
         + str(round(maxFits[-1]))
         + " mm"
     )
-if recordType == "smooth":
-    lists = []
-    for lst in [bestFits, avgFits, refFits]:
-        r_smooth_spline = robjects.r["smooth.spline"]
-        r_x = robjects.FloatVector(range(len(lst)))
-        r_y = robjects.FloatVector(lst)
-        kwargs = {"x": r_x, "y": r_y, "lambda": 1e-3}
-        spline = r_smooth_spline(**kwargs)
-        newLst = robjects.r["predict"](spline, r_x).rx2("y")
-        lists += [newLst]
-    bestFits = lists[0]
-    avgFits = lists[1]
-    refFits = lists[2]
 mkPlotFiles()
