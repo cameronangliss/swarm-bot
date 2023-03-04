@@ -12,7 +12,7 @@ def mkPlotFiles():
         plotFits()
         plotLegMotions()
         plotBotPath()
-    elif recordType == "raw" or recordType == "smooth":
+    elif recordType == "raw":
         plotFits()
     elif recordType == "ref" or recordType == "max" or recordType == "power":
         plotLegMotions()
@@ -21,28 +21,16 @@ def mkPlotFiles():
 
 def plotFits():
     xs = list(range(len(maxFits)))
-    if recordType == "smooth":
-        maxPlot = plt.plot(xs, maxFits, color="black",
-                           linewidth=1.2, label="MaxFits")
-        bestPlot = plt.plot(
-            xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
-        )
-        avgPlot = plt.plot(
-            xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
-        )
-        refPlot = plt.plot(xs, refFits, color="crimson",
-                           linewidth=1.2, label="RefFits")
-    elif recordType == "raw" or recordType == "default":
-        refPlot = plt.plot(xs, refFits, color="crimson",
-                           linewidth=1.2, label="RefFits")
-        maxPlot = plt.plot(xs, maxFits, color="black",
-                           linewidth=1.2, label="MaxFits")
-        bestPlot = plt.plot(
-            xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
-        )
-        avgPlot = plt.plot(
-            xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
-        )
+    refPlot = plt.plot(xs, refFits, color="crimson",
+                       linewidth=1.2, label="RefFits")
+    maxPlot = plt.plot(xs, maxFits, color="black",
+                       linewidth=1.2, label="MaxFits")
+    bestPlot = plt.plot(
+        xs, bestFits, color="limegreen", linewidth=1.2, label="BestFits"
+    )
+    avgPlot = plt.plot(
+        xs, avgFits, color="dodgerblue", linewidth=1.2, label="AvgFits"
+    )
     plt.xlabel("Generation")
     plt.ylabel("Fitness (mm)")
     plt.title("Bot Evolution\nBest Fitness = " +
@@ -52,8 +40,6 @@ def plotFits():
         endLabel = "_currentBotEvolution.png"
     elif recordType == "raw":
         endLabel = "_gen" + botGen + "rawBotEvolution.png"
-    elif recordType == "smooth":
-        endLabel = "_gen" + botGen + "smoothBotEvolution.png"
     fileName = "plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
@@ -174,7 +160,7 @@ recordType = sys.argv[2]
 botGen = sys.argv[3]
 powerLst = sys.argv[4]
 maxFit = sys.argv[5]
-dataFile = open(".stack-work/datafile.txt", "r")
+dataFile = open("datafile.txt", "r")
 maxFits = interpLstStr(dataFile.readline()[:-1])
 bestFits = interpLstStr(dataFile.readline()[:-1])
 avgFits = interpLstStr(dataFile.readline()[:-1])
