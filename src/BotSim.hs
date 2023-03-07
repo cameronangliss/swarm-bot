@@ -40,7 +40,11 @@ getBotFits iter = map (getBotFit iter)
 
 -- calculates the fitness of a bot
 getBotFit :: Int -> Bot -> Float
-getBotFit iter = getBotFitWhere iter (replicate 6 1.0)
+getBotFit iter bot =
+    let fit             = getBotFitWhere iter (replicate 6 1.0) bot
+        rangeFactorLsts = zipWith (\n lst -> replace lst n 0.5) [0 .. 5] (replicate 6 $ replicate 6 1.0)
+        limitedFits     = map (\rangeFactors -> getBotFitWhere iter rangeFactors bot) rangeFactorLsts
+    in  mean [fit, mean limitedFits]
 
 getBotFitWhere :: Int -> [Float] -> Bot -> Float
 getBotFitWhere iter rangeFactors = fst . last . getBotPath iter rangeFactors

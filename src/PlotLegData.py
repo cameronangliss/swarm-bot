@@ -1,10 +1,11 @@
+import sys
+import rpy2.robjects as robjects
 import matplotlib.pyplot as plt
 import os
 
 os.environ["R_HOME"] = "C:/Program Files/R/R-4.2.0"
-os.environ["PATH"] = "C:/Program Files/R/R-4.2.0/bin/x64" + ";" + os.environ["PATH"]
-import rpy2.robjects as robjects
-import sys
+os.environ["PATH"] = "C:/Program Files/R/R-4.2.0/bin/x64" + \
+    ";" + os.environ["PATH"]
 
 
 def mkPlotFiles():
@@ -21,9 +22,9 @@ def plotFits():
     plt.title("Leg Evolution")
     plt.legend()
     if isFinal:
-        fileName = ".stack-work\\plots\\" + name + "_finalLegEvolution.png"
+        fileName = "plots/" + name + "_finalLegEvolution.png"
     else:
-        fileName = ".stack-work\\plots\\" + name + "_legEvolution.png"
+        fileName = "plots/" + name + "_legEvolution.png"
     open(fileName, "w")
     plt.savefig(fileName)
     plt.close("all")
@@ -39,9 +40,9 @@ def plotMotionSpace():
     plt.ylabel("Y Position (mm)")
     plt.title("Best Leg Motion\nFitness = " + str(bestFit) + " mm")
     if isFinal:
-        fileName = ".stack-work\\plots\\" + name + "_finalLegMotion.png"
+        fileName = "plots/" + name + "_finalLegMotion.png"
     else:
-        fileName = ".stack-work\\plots\\" + name + "_legMotion.png"
+        fileName = "plots/" + name + "_legMotion.png"
     open(fileName, "w")
     plt.savefig(fileName)
     plt.close("all")
@@ -55,20 +56,20 @@ def interpLstStr(lstStr):
         substr = lstStr[posStart:]
         posEnd = posStart + findEndBracket(substr)
         if posStart == 1 and posEnd + 2 == len(lstStr):
-            return [interpLstStr(lstStr[posStart : posEnd + 1])]
+            return [interpLstStr(lstStr[posStart: posEnd + 1])]
         elif posStart == 1:
-            return [interpLstStr(lstStr[posStart : posEnd + 1])] + interpLstStr(
-                "[" + lstStr[posEnd + 2 :]
+            return [interpLstStr(lstStr[posStart: posEnd + 1])] + interpLstStr(
+                "[" + lstStr[posEnd + 2:]
             )
         elif posEnd + 2 == len(lstStr):
             return interpLstStr(lstStr[: posStart - 1] + "]") + [
-                interpLstStr(lstStr[posStart : posEnd + 1])
+                interpLstStr(lstStr[posStart: posEnd + 1])
             ]
         else:
             return (
                 interpLstStr(lstStr[: posStart - 1] + "]")
-                + [interpLstStr(lstStr[posStart : posEnd + 1])]
-                + interpLstStr("[" + lstStr[posEnd + 2 :])
+                + [interpLstStr(lstStr[posStart: posEnd + 1])]
+                + interpLstStr("[" + lstStr[posEnd + 2:])
             )
 
 
@@ -97,7 +98,7 @@ def isFlatLst(lstStr):
 
 name = sys.argv[1]
 isFinal = bool(sys.argv[2])
-dataFile = open(".stack-work\\datafile.txt", "r")
+dataFile = open("datafile.txt", "r")
 bestFits = interpLstStr(dataFile.readline()[:-1])
 bestFit = round(bestFits[-1])
 avgFits = interpLstStr(dataFile.readline()[:-1])

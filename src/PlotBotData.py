@@ -14,7 +14,7 @@ def mkPlotFiles():
         plotBotPath()
     elif recordType == "raw":
         plotFits()
-    elif recordType == "ref" or recordType == "max" or recordType == "power":
+    elif recordType == "ref" or recordType == "max" or recordType == "limitRange":
         plotLegMotions()
         plotBotPath()
 
@@ -71,8 +71,8 @@ def plotLegMotions():
         endLabel = "_gen" + botGen + "refBotMotions.png"
     elif recordType == "max":
         endLabel = "_gen" + botGen + "maxBotMotions.png"
-    elif recordType == "power":
-        endLabel = f"_{powerLst}_reducedBotMotions.png"
+    elif recordType == "limitRange":
+        endLabel = f"_{rangeFactors}_reducedBotMotions.png"
     fileName = "plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
@@ -99,8 +99,8 @@ def plotBotPath():
         endLabel = "_gen" + botGen + "refBotPath.png"
     elif recordType == "max":
         endLabel = "_gen" + botGen + "maxBotPath.png"
-    elif recordType == "power":
-        endLabel = f"_{powerLst}_reducedBotPath.png"
+    elif recordType == "limitRange":
+        endLabel = f"_{rangeFactors}_reducedBotPath.png"
     fileName = "plots/" + name + endLabel
     open(fileName, "w")
     plt.savefig(fileName)
@@ -158,7 +158,7 @@ def isFlatLst(lstStr):
 name = sys.argv[1]
 recordType = sys.argv[2]
 botGen = sys.argv[3]
-powerLst = sys.argv[4]
+rangeFactors = sys.argv[4]
 maxFit = sys.argv[5]
 dataFile = open("datafile.txt", "r")
 maxFits = interpLstStr(dataFile.readline()[:-1])
@@ -206,17 +206,17 @@ elif recordType == "max":
         + str(round(maxFits[-1]))
         + " mm"
     )
-elif recordType == "power":
+elif recordType == "limitRange":
     legTitle = (
         "MaxBot's Leg Motions with range-of-motion array "
-        + powerLst
+        + rangeFactors
         + "\nFitness = "
         + maxFit
         + " mm"
     )
     pathTitle = (
         "MaxBot's Path on Floor with range-of-motion array "
-        + powerLst
+        + rangeFactors
         + "\nFitness = "
         + maxFit
         + " mm"

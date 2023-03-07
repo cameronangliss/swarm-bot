@@ -97,7 +97,7 @@ viewBot params records g = do
     putStrLn "    plotSmooth -> plots smoothed data from run up to desired generation"
     putStrLn "    plotRef    -> plots movement of refBot from desired generation"
     putStrLn "    plotMax    -> plots movement of maxBot from desired generation"
-    putStrLn "    power      -> tests maxBot when functionality is decreased in chosen legs"
+    putStrLn "    limitRange -> tests maxBot when functionality is decreased in chosen legs"
     putStrLn "    run        -> resume run with unchanged parameters up to desired generation"
     putStrLn "    change     -> change parameters of run"
     putStrLn "    back       -> return to main menu"
@@ -138,8 +138,8 @@ viewBot params records g = do
             | input == "plotMax" = do
                 recordBotRun params records g "max"
                 viewBot params records g
-            | input == "power" = do
-                recordBotRun params records g "power"
+            | input == "limitRange" = do
+                recordBotRun params records g "limitRange"
                 viewBot params records g
             | input == "run" = do
                 putStr "\nEnter desired generation to compute up to: "
@@ -174,16 +174,16 @@ computeBotRun params records g genCap = do
 
 recordBotRun :: BotParams -> BotRecords -> StdGen -> String -> IO ()
 recordBotRun params records g recordType = do
-    numGens <- if recordType == "default" || recordType == "power"
+    numGens <- if recordType == "default" || recordType == "limitRange"
         then (return . length . bestFs) records
         else if recordType == "raw" || recordType == "smooth"
             then putStr "\nEnter the generation you would like to plot up to: " >> readLn >>= (\x -> return (x + 1))
             else putStr "\nEnter desired generation of bot: " >> readLn >>= (\x -> return (x + 1))
     let truncRecords = getTruncRecords params records numGens
-        bot          = if recordType == "max" || recordType == "power"
+        bot          = if recordType == "max" || recordType == "limitRange"
             then last (maxBs truncRecords)
             else last (refBs truncRecords)
-    rangeFactors <- if recordType == "power"
+    rangeFactors <- if recordType == "limitRange"
         then do
             putStr "\nEnter list of levels of capability of bot legs (ex: [1, 1, 0.5, 0, 0.25, 1]: "
             readLn
@@ -201,7 +201,7 @@ recordBotRun params records g recordType = do
               ]
     if recordType == "default"
         then do
-            writeFile (".stack-work/runs/" ++ show params ++ ".txt") (show (records, unStdGen g))
+            writeFile ("runs/" ++ show params ++ ".txt") (show (records, unStdGen g))
             putStrLn "\nPlots drawn, save file overwritten."
         else do
             putStrLn "\nPlots drawn."
@@ -219,10 +219,10 @@ getTruncRecords params records numGens =
     in  BotRecords newMaxBs newMaxFs newBestFs newAvgFs newRefBs newRefFs (bss records) (fss records)
 
 writeDataFile :: BotParams -> BotRecords -> Bot -> [Float] -> IO ()
-writeDataFile params records bot powerLst = do
-    let legMoves         = testBot (BotGA.i params) powerLst bot
+writeDataFile params records bot rangeFactors = do
+    let legMoves         = testBot (BotGA.i params) rangeFactors bot
         unzippedLegMoves = map (fromTup . unzip) legMoves
-        botPath          = getBotPath (BotGA.i params) powerLst bot
+        botPath          = getBotPath (BotGA.i params) rangeFactors bot
         unzippedBotPath  = fromTup (unzip botPath)
         refFits          = (concatMap (replicate $ genP params) . init . refFs) records ++ [last $ refFs records]
         fitsTxt          = (unlines . map show) [BotGA.maxFs records, bestFs records, BotGA.avgFs records, refFits]
