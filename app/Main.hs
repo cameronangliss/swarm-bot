@@ -6,7 +6,8 @@ import           BotGA                          ( BotParams(BotParams, genP, i, 
                                                 , getInitBotRecords
                                                 , runBotGA
                                                 )
-import           BotSim                         ( getBotPath
+import           BotSim                         ( getBotFitWhere
+                                                , getBotPath
                                                 , testBot
                                                 )
 import           Control.Monad.Random           ( StdGen
@@ -96,6 +97,7 @@ viewBot params records g = do
     putStrLn "    plotSmooth -> plots smoothed data from run up to desired generation"
     putStrLn "    plotRef    -> plots movement of refBot from desired generation"
     putStrLn "    plotMax    -> plots movement of maxBot from desired generation"
+    putStrLn "    limitRange -> tests maxBot when functionality is decreased in chosen legs"
     putStrLn "    run        -> resume run with unchanged parameters up to desired generation"
     putStrLn "    change     -> change parameters of run"
     putStrLn "    back       -> return to main menu"
@@ -136,6 +138,9 @@ viewBot params records g = do
             | input == "plotMax" = do
                 recordBotRun params records g "max"
                 viewBot params records g
+            | input == "limitRange" = do
+                recordBotRun params records g "limitRange"
+                viewBot params records g
             | input == "run" = do
                 putStr "\nEnter desired generation to compute up to: "
                 input <- readLn
@@ -169,15 +174,31 @@ computeBotRun params records g genCap = do
 
 recordBotRun :: BotParams -> BotRecords -> StdGen -> String -> IO ()
 recordBotRun params records g recordType = do
-    numGens <- if recordType == "default"
+    numGens <- if recordType == "default" || recordType == "limitRange"
         then (return . length . bestFs) records
         else if recordType == "raw" || recordType == "smooth"
             then putStr "\nEnter the generation you would like to plot up to: " >> readLn >>= (\x -> return (x + 1))
             else putStr "\nEnter desired generation of bot: " >> readLn >>= (\x -> return (x + 1))
     let truncRecords = getTruncRecords params records numGens
-        bot          = if recordType == "max" then last (maxBs truncRecords) else last (refBs truncRecords)
-    writeDataFile params truncRecords bot
-    callCommand $ unwords ["python3 src/PlotBotData.py", show params, recordType, show (numGens - 1)]
+        bot          = if recordType == "max" || recordType == "limitRange"
+            then last (maxBs truncRecords)
+            else last (refBs truncRecords)
+    rangeFactors <- if recordType == "limitRange"
+        then do
+            putStr "\nEnter list of levels of capability of bot legs (ex: [1, 1, 0.5, 0, 0.25, 1]: "
+            readLn
+        else return $ replicate 6 1.0
+    let fit = getBotFitWhere (BotGA.i params) rangeFactors bot
+    writeDataFile params truncRecords bot rangeFactors
+    callCommand
+        $ unwords
+              [ "python3 src/PlotBotData.py"
+              , show params
+              , recordType
+              , show (numGens - 1)
+              , show rangeFactors
+              , show (round fit)
+              ]
     if recordType == "default"
         then do
             writeFile ("runs/" ++ show params ++ ".txt") (show (records, unStdGen g))
@@ -197,11 +218,11 @@ getTruncRecords params records numGens =
         newRefFs        = take numRefs (refFs records)
     in  BotRecords newMaxBs newMaxFs newBestFs newAvgFs newRefBs newRefFs (bss records) (fss records)
 
-writeDataFile :: BotParams -> BotRecords -> Bot -> IO ()
-writeDataFile params records bot = do
-    let legMoves         = testBot (BotGA.i params) bot
+writeDataFile :: BotParams -> BotRecords -> Bot -> [Float] -> IO ()
+writeDataFile params records bot rangeFactors = do
+    let legMoves         = testBot (BotGA.i params) rangeFactors bot
         unzippedLegMoves = map (fromTup . unzip) legMoves
-        botPath          = getBotPath (BotGA.i params) bot
+        botPath          = getBotPath (BotGA.i params) rangeFactors bot
         unzippedBotPath  = fromTup (unzip botPath)
         refFits          = (concatMap (replicate $ genP params) . init . refFs) records ++ [last $ refFs records]
         fitsTxt          = (unlines . map show) [BotGA.maxFs records, bestFs records, BotGA.avgFs records, refFits]
@@ -308,7 +329,7 @@ recordLegRun params records g isFinal = do
     let label        = show params
         legPosits    = testNet (NetGA.i params) $ last (maxNs records)
         (xLst, yLst) = unzip legPosits
-    writeFile ".stack-work\\datafile.txt"
+    writeFile ".stack-work/datafile.txt"
         $  show (NetGA.maxFs records)
         ++ "\n"
         ++ show (NetGA.avgFs records)
